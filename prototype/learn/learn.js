@@ -158,6 +158,7 @@
       E.forEach((_, i) => {
         const done = seen.has(i), strength = Math.min(plays[i] || 0, 4);
         leaves[i].dataset.state = done ? "done" : "todo";
+        leaves[i].dataset.mastered = String(quiz[i] === "right");
         tiles[i].dataset.state = done ? "done" : "todo";
         tiles[i].style.setProperty("--w", done ? 1 : Math.min(strength / 4, 0.75));
         const g = $(".grown", leaves[i]);
@@ -184,20 +185,59 @@
       $("#poster-hint").textContent = direct ? "The owner keeps this video on its own site." : "Plays " + fmt(e.start) + " to " + fmt(e.end);
     };
 
-    const play = () => {
+    const play = (from) => {
       const e = E[cur];
+      const a = Number.isFinite(from) ? from : e.start;
+      const z = Number.isFinite(from) ? from + 120 : e.end;
       poster.hidden = true;
+      arch.querySelectorAll("video, iframe").forEach((n) => n.remove());
       if (L.media) {
-        const v = el("video", { controls: true, preload: "metadata", src: L.media + "#t=" + e.start });
-        v.addEventListener("loadedmetadata", () => { v.currentTime = e.start; v.play().catch(() => {}); });
-        v.addEventListener("timeupdate", () => { if (v.currentTime >= e.end) { v.pause(); v.currentTime = e.end; } });
+        const v = el("video", { controls: true, preload: "metadata", src: L.media + "#t=" + a });
+        v.addEventListener("loadedmetadata", () => { v.currentTime = a; v.play().catch(() => {}); });
+        v.addEventListener("timeupdate", () => { if (v.currentTime >= z) { v.pause(); v.currentTime = z; } });
         arch.append(v);
       } else {
-        arch.append(el("iframe", { src: "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(L.id) + "?start=" + e.start + "&end=" + e.end + "&autoplay=1&rel=0", title: e.title, allow: "encrypted-media; picture-in-picture; autoplay", allowFullscreen: true }));
+        arch.append(el("iframe", { src: "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(L.id) + "?start=" + a + "&end=" + z + "&autoplay=1&rel=0", title: e.title, allow: "encrypted-media; picture-in-picture; autoplay", allowFullscreen: true }));
       }
       plays[cur] = (plays[cur] || 0) + 1; set(kPlays, JSON.stringify(plays)); paint();
     };
-    $("#play").addEventListener("click", play);
+    $("#play").addEventListener("click", () => play());
+
+    /* Check yourself: one grounded question per episode */
+    const Q = new Map((L.questions || []).map((q) => [q.episode, q]));
+    const kQuiz = "campus-quiz:" + L.id;
+    const quiz = JSON.parse(get(kQuiz) || "{}");
+    const renderQuiz = () => {
+      const q = Q.get(cur), box = $("#quiz");
+      box.hidden = !q;
+      if (!q) return;
+      $("#q-text").textContent = q.question;
+      const opts = $("#q-options"), fb = $("#q-feedback");
+      opts.textContent = ""; fb.textContent = "";
+      const lock = () => opts.querySelectorAll("button").forEach((b) => { b.disabled = true; });
+      q.options.forEach((o, i) => {
+        const b = el("button", { type: "button", className: "q-opt" }, el("i", { textContent: "ABCD"[i] }), el("span", { textContent: o }));
+        b.addEventListener("click", () => {
+          lock();
+          const ok = i === q.answer;
+          b.dataset.result = ok ? "right" : "wrong";
+          if (!ok) opts.children[q.answer].dataset.result = "right";
+          quiz[cur] = ok ? "right" : (quiz[cur] === "right" ? "right" : "wrong"); set(kQuiz, JSON.stringify(quiz));
+          fb.textContent = "";
+          fb.append(el("p", {}, el("strong", { textContent: ok ? "Right. " : "Not quite. " }), q.why[i]));
+          if (!ok) {
+            fb.append(el("p", { textContent: "The right answer: " + q.why[q.answer] }));
+            const again = el("button", { type: "button", className: "btn", textContent: "Hear it at " + fmt(q.ts) });
+            again.addEventListener("click", () => { play(q.ts); $("#arch").scrollIntoView({ block: "center", behavior: calm ? "auto" : "smooth" }); });
+            const retry = el("button", { type: "button", className: "btn", textContent: "Try again" });
+            retry.addEventListener("click", renderQuiz);
+            fb.append(el("span", { className: "ep-actions" }, again, retry));
+          } else { seen.add(cur); set(kSeen, JSON.stringify([...seen])); }
+          paint();
+        });
+        opts.append(b);
+      });
+    };
 
     const render = () => {
       const e = E[cur];
@@ -206,7 +246,7 @@
       $("#e-lead").textContent = e.lead;
       $("#e-plain").textContent = e.plain || "";
       $("#e-plain-wrap").hidden = !e.plain;
-      showPoster(); paint();
+      showPoster(); renderQuiz(); paint();
     };
     function go(i) {
       cur = Math.max(0, Math.min(N - 1, i));
@@ -223,12 +263,42 @@
 
     actions = [
       ...E.map((e, i) => ({ label: e.title, hint: "episode " + (i + 1) + ", " + fmt(e.start), run: () => go(i) })),
-      { label: "Play this episode", hint: "enter", run: play },
+      { label: "Play this episode", hint: "enter", run: () => play() },
       { label: "Mark this episode as watched", hint: "progress", run: () => $("#seen").click() },
       { label: "Open the original source", hint: "new tab", run: () => window.open(L.source_url, "_blank", "noopener") },
       { label: "Switch light and dark", hint: "theme", run: toggleMode },
       { label: "All lectures", hint: "catalogue", run: () => { location.href = "./"; } },
     ];
+
+    const prof = $("#prof"), pa = $("#prof-answer"), pf = $("#prof-form"), pq = $("#prof-q");
+    $("#open-prof").hidden = false;
+    const openProf = () => { prof.showModal(); pq.focus(); };
+    $("#open-prof").addEventListener("click", openProf);
+    $("#prof-close").addEventListener("click", () => prof.close());
+    prof.addEventListener("click", (e) => { if (e.target === prof) prof.close(); });
+    const playAt = (t) => { const k = E.findIndex((e) => t >= e.start && t < e.end); if (k >= 0 && k !== cur) { cur = k; history.replaceState(null, "", "#ep-" + (cur + 1)); render(); } prof.close(); play(t); $("#arch").scrollIntoView({ block: "center", behavior: calm ? "auto" : "smooth" }); };
+    pf.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const text = pq.value.trim(); if (text.length < 4) return;
+      $("#prof-send").disabled = true; pa.textContent = "Looking through the lecture";
+      try {
+        const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lesson: L.id, question: text }) });
+        const j = await r.json();
+        pa.textContent = "";
+        if (!r.ok) { pa.append(el("p", { textContent: j.error || "Something went wrong." })); return; }
+        const body = el("p", { className: "a" });
+        // turn [123] labels into buttons that play the lecture at that second
+        j.answer.split(/(\[\d+\])/).forEach((part) => {
+          const m = /^\[(\d+)\]$/.exec(part);
+          if (m && j.grounded) { const b = el("button", { type: "button", className: "cite", textContent: fmt(Number(m[1])) }); b.addEventListener("click", () => playAt(Number(m[1]))); body.append(b); }
+          else body.append(part);
+        });
+        pa.append(body);
+        if (!j.grounded && j.passages?.length) j.passages.slice(0, 2).forEach((p) => { const b = el("button", { type: "button", className: "cite", textContent: "Play from " + fmt(p.start) }); b.addEventListener("click", () => playAt(p.start)); pa.append(el("blockquote", { textContent: p.text.slice(0, 220) }), b); });
+      } catch (e) { pa.textContent = "Could not reach the professor. Try again."; }
+      finally { $("#prof-send").disabled = false; }
+    });
+    actions.push({ label: "Ask the professor", hint: "question", run: openProf });
 
     const start = /^#ep-(\d+)$/.exec(location.hash);
     cur = start ? Math.max(0, Math.min(N - 1, Number(start[1]) - 1)) : Math.max(0, E.findIndex((_, i) => !seen.has(i)));

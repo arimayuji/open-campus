@@ -33,6 +33,7 @@
 
   <div class="surface">
     <header class="top">
+      <button type="button" class="chip" id="open-prof" hidden>Ask the professor</button>
       <button type="button" class="chip" id="open-palette" aria-keyshortcuts="Control+K Meta+K">Jump to <kbd id="kbd">Ctrl K</kbd></button>
       <button type="button" class="chip" id="mode" aria-pressed="false" aria-label="Dark mode"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.2 9.6A5.5 5.5 0 0 1 6.4 2.8a5.5 5.5 0 1 0 6.8 6.8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span class="mode-label">Light</span></button>
     </header>
@@ -56,6 +57,12 @@
           <h1 id="e-title"></h1>
           <p class="lead" id="e-lead"></p>
           <blockquote class="plain" id="e-plain-wrap"><p class="plain-label">In plain words</p><p id="e-plain"></p></blockquote>
+          <section class="quiz" id="quiz" hidden aria-labelledby="q-h">
+            <h2 id="q-h">Check yourself</h2>
+            <p class="q-text" id="q-text"></p>
+            <div class="q-options" id="q-options" role="group" aria-labelledby="q-text"></div>
+            <div class="q-feedback" id="q-feedback" role="status" aria-live="polite"></div>
+          </section>
           <div class="ep-actions">
             <button type="button" class="btn btn--solid" id="seen">Mark as watched</button>
             <button type="button" class="btn" id="next">Next episode</button>
@@ -76,6 +83,18 @@
     </main>
   </div>
 </div>
+
+<dialog class="prof" id="prof" aria-label="Ask the professor">
+  <div class="prof-box">
+    <div class="prof-head"><h2>Ask the professor</h2><button type="button" class="chip" id="prof-close">Close</button></div>
+    <p class="prof-note">Answers come only from this lecture, and every claim points to the minute it was said.</p>
+    <form id="prof-form" class="prof-form">
+      <input type="text" id="prof-q" maxlength="300" placeholder="For example: why does the sigmoid stay between 0 and 1?" aria-label="Your question" autocomplete="off" required>
+      <button type="submit" class="btn btn--solid" id="prof-send">Ask</button>
+    </form>
+    <div class="prof-answer" id="prof-answer" aria-live="polite"></div>
+  </div>
+</dialog>
 
 <dialog class="palette" id="palette" aria-label="Jump to">
   <form method="dialog" class="palette-box">

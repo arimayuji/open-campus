@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { windows, parseSource, openLicense, parseCaptions, condense, validate, uniform, readEpisodes } from "../src/core.js";
+import { passages, bm25, checkAnswer, norm, validateQuestion, evidenceTime, windows, parseSource, openLicense, parseCaptions, condense, validate, uniform, readEpisodes } from "../src/core.js";
 
 test("parseSource accepts known hosts only", () => {
   assert.deepEqual(parseSource("https://www.youtube.com/watch?v=abB3fwfPy14&t=3"), { kind: "youtube", id: "abB3fwfPy14" });
@@ -62,4 +62,39 @@ test("windows tile the lecture", () => {
   const w = windows(4874); assert.equal(w[0].from, 0); assert.equal(w.at(-1).to, 4874);
   w.forEach((x, i) => { if (i) assert.equal(x.from, w[i - 1].to); assert.ok(x.to - x.from <= 1700); });
   assert.equal(windows(900).length, 1);
+});
+
+const TEXT = "So the sigmoid squashes any number into the range zero to one. That is why we can read it as a probability.";
+const Q = { question: "Why can the output of the sigmoid be read as a probability?", options: ["It always lands between zero and one", "It is always exactly one half", "It can be negative", "It never changes"], answer: 0,
+  why_wrong: ["Right: it is squashed into zero to one.", "Only at the middle point.", "It never goes below zero.", "It changes smoothly with the input."], concept: "Sigmoid range",
+  evidence: "That is why we can read it as a probability." };
+test("validateQuestion keeps a grounded question", () => assert.deepEqual(validateQuestion(Q, TEXT), []));
+test("validateQuestion rejects invented evidence and bad shapes", () => {
+  assert.ok(validateQuestion({ ...Q, evidence: "The sigmoid was invented in 1838 by Verhulst." }, TEXT).some((p) => p.includes("verbatim")));
+  assert.ok(validateQuestion({ ...Q, options: ["a", "a", "b", "c"] }, TEXT).length);
+  assert.ok(validateQuestion({ ...Q, answer: 4 }, TEXT).length);
+  assert.ok(validateQuestion({ ...Q, why_wrong: ["x"] }, TEXT).length);
+  assert.ok(validateQuestion(null, TEXT).length);
+});
+test("evidenceTime finds the chunk", () => {
+  const ch = [{ start: 10, text: "so the sigmoid squashes" }, { start: 14, text: "any number into the range zero to one" }, { start: 20, text: "that is why we can read it as a probability" }];
+  assert.equal(evidenceTime("That is why we can read it as a probability.", ch, 0), 20);
+  assert.equal(evidenceTime("Nothing like this here at all.", ch, 7), 7);
+});
+
+const CH = [{ start: 0, text: "welcome everyone today we talk about logistic regression" }, { start: 50, text: "the sigmoid squashes any number into zero to one" },
+  { start: 100, text: "gradient descent takes small steps downhill to minimise the loss" }, { start: 150, text: "regularization penalises large weights to avoid overfitting" }];
+test("bm25 finds the right passage", () => {
+  const d = passages(CH, 45);
+  assert.equal(bm25(d, "what does the sigmoid do?", 2)[0].start, 50);
+  assert.equal(bm25(d, "how does gradient descent work", 1)[0].start, 100);
+  assert.deepEqual(bm25(d, "quantum chromodynamics", 3), []);
+  assert.deepEqual(bm25(d, "the and of", 3), []);
+});
+test("checkAnswer enforces real citations", () => {
+  const found = [{ start: 50 }, { start: 100 }];
+  assert.ok(checkAnswer("It squashes numbers [50].", found).ok);
+  assert.ok(!checkAnswer("It squashes numbers [999].", found).ok);
+  assert.ok(!checkAnswer("It squashes numbers.", found).ok);
+  assert.ok(!checkAnswer("NOT COVERED", found).ok);
 });

@@ -10,6 +10,7 @@
   "containers": [{ "class_name": "YtDlp", "image": "./container/Dockerfile", "max_instances": 2, "instance_type": "standard-1" }],
   "durable_objects": { "bindings": [{ "name": "YTDLP", "class_name": "YtDlp" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["YtDlp"] }],
+  "unsafe": { "bindings": [{ "name": "ASK_LIMIT", "type": "ratelimit", "namespace_id": "1001", "simple": { "limit": 8, "period": 60 } }] },
   "vars": { "CF_ACCOUNT_ID": "35e69fe7af35640858f66cc92350e2bb" },
   "routes": [
     { "pattern": "opencampus.dev", "custom_domain": true },

@@ -4,7 +4,7 @@
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { ytInfo, ytHost } from "./ytdlp.js";
-import { parseSource, openLicense, parseCaptions, condense, prompt, windows, validate, uniform, readEpisodes } from "./core.js";
+import { parseSource, openLicense, parseCaptions, condense, prompt, windows, validate, uniform, readEpisodes, questionPrompt, validateQuestion, evidenceTime } from "./core.js";
 
 const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const UA = { "User-Agent": "OpenCampus/1.0 (+https://opencampus.dev)" };
@@ -181,14 +181,36 @@ export class IngestLesson extends WorkflowEntrypoint {
       }
       const cuts = { episodes: eps, review };
 
+      // One question per episode. A question is kept only when its evidence is a verbatim sentence of that episode.
+      const questions = [];
+      for (const [i, e] of cuts.episodes.entries()) {
+        const q = await step.do(`question-${i}`, { retries: { limit: 1, delay: "5 seconds" }, timeout: "3 minutes" }, async () => {
+          if (cuts.review) return null; // equal-part fallbacks have no real topic to ask about
+          const inside = chunks.filter((c) => c.start >= e.start && c.start < e.end);
+          const text = inside.map((c) => c.text).join(" ").slice(0, 7000);
+          for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+              const out = await env.AI.run(MODEL, { messages: [{ role: "user", content: questionPrompt(e.title, text) }], max_tokens: 900, temperature: 0.3 });
+              const raw = typeof out.response === "object" ? out.response : JSON.parse(String(out.response).slice(String(out.response).indexOf("{"), String(out.response).lastIndexOf("}") + 1));
+              if (!validateQuestion(raw, text).length) {
+                return { episode: i, question: raw.question.trim(), options: raw.options.map((o) => o.trim()), answer: raw.answer, why: raw.why_wrong.map((w) => w.trim()),
+                  concept: raw.concept.trim(), evidence: raw.evidence.trim(), ts: evidenceTime(raw.evidence, inside, e.start) };
+              }
+            } catch { /* try once more, then skip this episode */ }
+          }
+          return null;
+        });
+        if (q) questions.push(q);
+      }
+
       await step.do("save", async () => {
         await env.DB.prepare(
-          `INSERT INTO lessons (id, kind, source_url, title, creator, license, hosted, embeddable, stream_uid, topic, level, duration, needs_review, episodes)
-           VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14)
+          `INSERT INTO lessons (id, kind, source_url, title, creator, license, hosted, embeddable, stream_uid, topic, level, duration, needs_review, episodes, questions)
+           VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)
            ON CONFLICT(id) DO UPDATE SET title=?4, creator=?5, license=?6, hosted=?7, embeddable=?8, stream_uid=?9, topic=?10, level=?11,
-             duration=?12, needs_review=?13, episodes=?14, status='draft', published_at=NULL`)
+             duration=?12, needs_review=?13, episodes=?14, questions=?15, status='draft', published_at=NULL`)
           .bind(src.id, src.kind, src.url, src.title, src.creator, src.license, src.hosted ? 1 : 0, src.embeddable ? 1 : 0, uid, topic || "", level || "",
-            duration, cuts.review ? 1 : 0, JSON.stringify(cuts.episodes)).run();
+            duration, cuts.review ? 1 : 0, JSON.stringify(cuts.episodes), JSON.stringify(questions)).run();
         await setJob(env, jobId, { state: "done", step: "draft saved", lesson_id: src.id, error: null });
       });
       return { lesson: src.id };
