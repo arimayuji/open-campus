@@ -77,7 +77,7 @@
     root.append(el("p", { class: "count" }, "Results"), el("h1", {}, n + " of " + E.questions.length + " ideas mastered"), el("p", { class: "q-text" }, "Anything marked for review comes back as a retest, worded differently."), list,
       el("div", { class: "actions" }, el("a", { class: "btn btn--primary", href: "../lesson/index.html" }, "Back to lesson"), el("button", { type: "button", class: "btn", id: "again" }, "Start again")));
     document.getElementById("again").addEventListener("click", () => { i = 0; phase = "orig"; Object.keys(results).forEach((k) => delete results[k]); render(); });
-    try { const m = JSON.parse(localStorage.getItem(KEY) || "{}"); Object.entries(results).forEach(([c, r]) => { m["cs229-l3:" + c] = Object.assign({}, r, { due: r.state === "mastered" ? null : Date.now() + 2 * 86400000 }); }); localStorage.setItem(KEY, JSON.stringify(m)); } catch (e) { /* storage can be blocked */ }
+    try { const m = JSON.parse(localStorage.getItem(KEY) || "{}"); Object.entries(results).forEach(([c, r]) => { m["mit6036-l4:" + c] = Object.assign({}, r, { due: r.state === "mastered" ? null : Date.now() + 2 * 86400000 }); }); localStorage.setItem(KEY, JSON.stringify(m)); } catch (e) { /* storage can be blocked */ }
   }
   render();
 })();

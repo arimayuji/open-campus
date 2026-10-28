@@ -1,124 +1,124 @@
-/* Smart exam for Stanford CS229 Lecture 3 (video het9HFqo1TQ). Every item cites a lecture timestamp (seconds).
+/* Smart exam for MIT 6.036 Lecture 4: Logistic regression (video abB3fwfPy14). Every item cites a lecture timestamp (seconds).
    Rule: a wrong option carries `why`, the misconception it stands for. `variant` tests the same concept from a different angle. */
 window.EXAM = {
-  video: "het9HFqo1TQ",
+  video: "abB3fwfPy14",
   title: "Logistic regression: check yourself",
   concepts: {
-    boundary: "Why a straight line fails",
+    uncertainty: "Showing uncertainty",
     sigmoid: "The sigmoid",
-    prob: "Chances add up to 1",
-    mle: "Maximum likelihood",
-    ascent: "Gradient ascent"
+    boundary: "The 50-50 line",
+    nll: "Scoring the guesses",
+    reg: "Not being too sure"
   },
   questions: [
     {
-      id: "q1", concept: "boundary", ts: 2687,
-      text: "You fit a straight line to yes-or-no data and say “yes” whenever the line is above 0.5. Then someone adds one more clear “yes” example far to the right. What happens?",
+      id: "q1", concept: "uncertainty", ts: 321,
+      text: "A perceptron draws one hard boundary between “yes” and “no”. What does logistic regression add that the hard boundary cannot show?",
       options: [
-        { id: "a", text: "Nothing changes, because the new example agrees with the pattern.", why: "It feels safe because the new point fits the pattern. But a fitted line chases every point, so a far-away one tilts it." },
-        { id: "b", text: "The line tilts, and the point where the answer flips moves, even though the pattern is still clear.", correct: true },
-        { id: "c", text: "The model turns its outputs into chances between 0 and 1.", why: "That is what logistic regression does. A straight line does not change its kind of output." },
-        { id: "d", text: "The model stops working until it is retrained from scratch.", why: "It keeps working, it just gives a worse answer. That is the problem." }
+        { id: "a", text: "A faster way to draw the same line.", why: "Speed is not the point. The line itself is the same kind of line." },
+        { id: "b", text: "How sure the model is, including regions where it is not certain.", correct: true },
+        { id: "c", text: "A curved boundary instead of a straight one.", why: "The boundary stays a straight line. What changes is that the output becomes a probability." },
+        { id: "d", text: "Perfect separation of data that was mixed together.", why: "Mixed data stays mixed. The model just admits that some regions are uncertain." }
       ],
-      explain: "In the lecture, one extra example moves the fitted line, and the 0.5 cut-off moves with it. That is why a straight line is a risky tool for yes-or-no questions.",
-      mini: "Picture a ruler laid across dots. Add one dot far away and the ruler tilts toward it, even if that dot was an easy “yes”. Logistic regression bends the line into an S-shape, so far-away points matter much less.",
+      explain: "The lecture points out that real data, like medical data, has regions where we are not sure. A hard boundary hides that, and a probability can show it.",
+      mini: "Think about deciding whether to wear a coat. Very cold: always. Very warm: never. In between you are unsure. A hard line says “coat” or “no coat”. A probability says “probably coat”.",
       variant: {
-        text: "A model must give a chance that a message is spam. Which output makes no sense as a chance?",
+        text: "In the coat example, as the temperature gets very high, the probability of wearing a coat gets closest to:",
         options: [
-          { id: "a", text: "0.20", why: "A chance of 0.20 means 20%, which is fine." },
-          { id: "b", text: "0.97", why: "A chance of 0.97 means 97%, which is fine." },
-          { id: "c", text: "−0.30", correct: true },
-          { id: "d", text: "0.50", why: "A chance of 0.50 means a coin flip, which is fine." }
+          { id: "a", text: "0%", correct: true },
+          { id: "b", text: "50%", why: "50% is the unsure middle, not the warm end." },
+          { id: "c", text: "100%", why: "100% is the very cold end of the curve." },
+          { id: "d", text: "It stops being a probability.", why: "It stays a probability. It just gets very close to 0." }
         ],
-        explain: "A chance must stay between 0 and 1. The lecture notes that a straight line can output values below 0 or above 1, which seems strange."
+        explain: "The curve goes smoothly from about 100% at low temperatures down to about 0% at high temperatures."
       }
     },
     {
-      id: "q2", concept: "sigmoid", ts: 2846,
-      text: "What does the sigmoid (logistic) function do to the score z?",
+      id: "q2", concept: "sigmoid", ts: 536,
+      text: "What does the sigmoid (logistic) function σ(z) = 1 / (1 + e^−z) do to a very large negative score z?",
       options: [
-        { id: "a", text: "It rounds z to exactly 0 or 1.", why: "Rounding is the later step of choosing a cut-off. The sigmoid itself gives smooth values in between." },
-        { id: "b", text: "It squeezes any score, however large or small, into a value between 0 and 1.", correct: true },
-        { id: "c", text: "It adds up the scores of all the training examples.", why: "Adding is a different operation. The sigmoid reshapes one score at a time." },
-        { id: "d", text: "It divides the score by the number of training examples.", why: "That is an average, a different idea. The sigmoid has nothing to do with the number of examples." }
+        { id: "a", text: "It gives a number close to 0.", correct: true },
+        { id: "b", text: "It gives a very large negative number.", why: "The sigmoid never leaves the range from 0 to 1, so it cannot return a large negative number." },
+        { id: "c", text: "It gives a number close to 1.", why: "That happens for a very large positive score, the other end of the S." },
+        { id: "d", text: "It gives exactly 0.5.", why: "0.5 is the middle of the S, which happens when the score is 0." }
       ],
-      explain: "The sigmoid forces the output to lie only between 0 and 1, so it can be read as a chance.",
-      mini: "Try the slider in the lesson: push the score far left or far right and the output flattens out near 0 or 1 but never leaves that range.",
+      explain: "As z gets very low, e^−z gets huge, so 1 / (1 + e^−z) gets close to 0. The S-curve flattens at 0 on the left and at 1 on the right.",
+      mini: "Try the slider in the lesson: drag the score far to the left and watch the output flatten near 0 without ever going below it.",
       variant: {
-        text: "If the score z is exactly 0, what is the sigmoid’s output?",
+        text: "If the score θᵀx + θ₀ is exactly 0, what probability does the model give?",
         options: [
-          { id: "a", text: "0", why: "That mixes up the score with the output. Only a very negative score gives an output near 0." },
-          { id: "b", text: "0.5", correct: true },
-          { id: "c", text: "1", why: "An output near 1 needs a large positive score." },
-          { id: "d", text: "It cannot be worked out.", why: "It can: 1 / (1 + e^0) = 1 / 2." }
+          { id: "a", text: "0", why: "Only a very low score gives something close to 0." },
+          { id: "b", text: "1", why: "Only a very high score gives something close to 1." },
+          { id: "c", text: "1/2", correct: true },
+          { id: "d", text: "It cannot be worked out.", why: "It can: 1 / (1 + e^0) = 1/2." }
         ],
-        explain: "At z = 0 the output is 1 / (1 + 1) = 0.5, the middle of the S-curve."
+        explain: "At a score of 0, σ(0) = 1/2. The lecture uses this to define the 50-50 line."
       }
     },
     {
-      id: "q3", concept: "prob", ts: 3103,
-      text: "A model says a tumor has a 10% chance of being malignant. What is the chance it is benign?",
+      id: "q3", concept: "boundary", ts: 967,
+      text: "In logistic regression with two features, the equation θᵀx + θ₀ = 0 describes:",
       options: [
-        { id: "a", text: "10%", why: "That repeats the same chance. The two outcomes are different, so their chances differ." },
-        { id: "b", text: "50%", why: "50% would mean the model is undecided. Here it has told you something specific." },
-        { id: "c", text: "It depends on more data about the patient.", why: "The model already gave its answer. With only two outcomes, one chance fixes the other." },
-        { id: "d", text: "90%", correct: true }
+        { id: "a", text: "The line where the model is 100% sure of a “yes”.", why: "Certainty comes far from the line. On the line the model is the least sure." },
+        { id: "b", text: "The points in the training data.", why: "The data are separate points. The equation describes the model’s own line." },
+        { id: "c", text: "The line where the probability is exactly 1/2.", correct: true },
+        { id: "d", text: "The place where the loss is zero.", why: "The loss depends on the data and the labels, not on this equation alone." }
       ],
-      explain: "With two outcomes the chances must add up to 1, so 1 − 0.10 = 0.90. The lecture gives exactly this example.",
-      mini: "Think of a pie with two slices. If one slice is 10% of the pie, the other slice is the rest, 90%.",
+      explain: "When θᵀx + θ₀ = 0, the sigmoid gives 1/2, so that equation draws the line where the model is exactly 50-50.",
+      mini: "Picture a hill that rises from “no” on one side to “yes” on the other. The 50-50 line is the middle of the slope.",
       variant: {
-        text: "A spam filter says a message is spam with probability 0.8. What is the probability it is not spam?",
+        text: "According to the lecture, the classifier predicts +1 when:",
         options: [
-          { id: "a", text: "0.2", correct: true },
-          { id: "b", text: "0.8", why: "That is the chance of spam, not of not-spam." },
-          { id: "c", text: "1.8", why: "A chance can never be above 1. Subtract from 1, do not add." },
-          { id: "d", text: "0.5", why: "0.5 would mean undecided. The filter leans clearly toward spam." }
+          { id: "a", text: "θᵀx + θ₀ is less than or equal to 0.", why: "That side is where it predicts the other label, −1." },
+          { id: "b", text: "θᵀx + θ₀ is greater than 0.", correct: true },
+          { id: "c", text: "The loss is exactly 0.", why: "The prediction depends on which side of the line the point is on." },
+          { id: "d", text: "The probability is exactly 1.", why: "The model almost never reaches exactly 1." }
         ],
-        explain: "1 − 0.8 = 0.2. The two chances always add up to 1."
+        explain: "It predicts +1 when θᵀx + θ₀ > 0 and −1 otherwise, the same linear classifiers as earlier in the course."
       }
     },
     {
-      id: "q4", concept: "mle", ts: 3372,
-      text: "When we “train” logistic regression, what are we choosing the weights θ to do?",
+      id: "q4", concept: "nll", ts: 2018,
+      text: "The lecture picks the weights that maximize the log of the probability instead of the probability itself. Why is that allowed?",
       options: [
-        { id: "a", text: "Make the training labels as probable as possible under the model.", correct: true },
-        { id: "b", text: "Make the squared gap between each label and a straight line as small as possible.", why: "That is the goal for linear regression. Logistic regression uses a different goal, maximum likelihood." },
-        { id: "c", text: "Make every prediction exactly 0.5.", why: "A model that always says 0.5 is undecided about everything and learns nothing." },
-        { id: "d", text: "Use as few features as possible.", why: "Choosing fewer features is a different task. Training adjusts the weights, not the list of features." }
+        { id: "a", text: "The log makes every probability bigger.", why: "The log of a number between 0 and 1 is not bigger, it is below 0." },
+        { id: "b", text: "The log is a monotonic function, so the same weights are best either way.", correct: true },
+        { id: "c", text: "The two answers are slightly different but close enough.", why: "They are exactly the same weights, not an approximation." },
+        { id: "d", text: "The probability cannot be maximized directly.", why: "It can. The log is used because it keeps the same best weights and is easier to work with." }
       ],
-      explain: "The lecture picks θ by maximum likelihood: the weights under which the observed labels are most probable.",
-      mini: "Imagine the model as a guesser. Good weights are the ones that, looking back at the real answers, make that guesser say: “yes, these are exactly the answers I expected.”",
+      explain: "Because the log keeps the order of the options, the weights that maximize the probability are exactly the ones that maximize its log.",
+      mini: "If you rank runners by finishing time, or by the log of finishing time, the order is the same. The log only changes the numbers, not who wins.",
       variant: {
-        text: "Why does the lecture take the log of the likelihood?",
+        text: "Why does the lecture then take the negative of the log probability?",
         options: [
-          { id: "a", text: "To make the probabilities larger.", why: "The log makes numbers smaller or negative, not larger." },
-          { id: "b", text: "To make the algebra simpler, because products turn into sums.", correct: true },
-          { id: "c", text: "Because the likelihood would otherwise be negative.", why: "A likelihood is never negative. It is a product of chances between 0 and 1." },
-          { id: "d", text: "To force the answer to be between 0 and 1.", why: "That is the sigmoid’s job, not the log’s." }
+          { id: "a", text: "To fit the loss framework, where lower is better.", correct: true },
+          { id: "b", text: "To make the probabilities add up to 1.", why: "The probabilities already add up to 1. The negative changes none of that." },
+          { id: "c", text: "To make the sigmoid steeper.", why: "The sigmoid is not changed by this step." },
+          { id: "d", text: "Because logs are only defined for negative numbers.", why: "The log is defined for positive numbers. A probability is positive." }
         ],
-        explain: "The lecture says the log is taken to make the algebra a bit simpler. The best weights are the same either way."
+        explain: "Earlier we talked about losses we want to be small. Taking the negative turns “make this as high as possible” into “make this as low as possible”."
       }
     },
     {
-      id: "q5", concept: "ascent", ts: 3586,
-      text: "Linear regression’s update has a minus sign, but logistic regression’s update in the lecture has a plus. Why?",
+      id: "q5", concept: "reg", ts: 4044,
+      text: "Why is a huge θ a problem, even though it makes the loss lower?",
       options: [
-        { id: "a", text: "It is a typo that is corrected later in the lecture.", why: "It is intentional and the lecture explains it." },
-        { id: "b", text: "The learning rate is negative for logistic regression.", why: "The learning rate stays a small positive number. The sign comes from the direction we move." },
-        { id: "c", text: "Here we maximize the log-likelihood, so we climb up the hill instead of down.", correct: true },
-        { id: "d", text: "Logistic regression tries to minimize the error, just like linear regression.", why: "It maximizes the likelihood. Maximizing means climbing, which flips the sign." }
+        { id: "a", text: "It makes the model claim more confidence than the data can justify.", correct: true },
+        { id: "b", text: "It makes the program run slower.", why: "Speed is not the issue. The issue is the quality of what the model claims." },
+        { id: "c", text: "It turns probabilities negative.", why: "Probabilities stay between 0 and 1 whatever θ is." },
+        { id: "d", text: "It makes the boundary disappear.", why: "The boundary is still there. The probabilities are just pushed to extremes." }
       ],
-      explain: "Gradient descent walks down a hill to minimize. Here we want to maximize the log-likelihood, so we walk up: gradient ascent, with a plus sign.",
-      mini: "Walking downhill to find a valley uses a minus. Walking uphill to find a summit uses a plus. Same walk, opposite direction.",
+      explain: "The lecture says a huge θ is too confident: you would need a lot of data to justify that level of certainty. Training happily raises θ because it lowers the loss, so we need a regularizer to push back.",
+      mini: "A forecaster who always says “100% rain” or “0% rain” is easy to fool. We want some humility built in, and the regularizer adds it.",
       variant: {
-        text: "What is special about the log-likelihood of logistic regression, as the lecture explains?",
+        text: "What is a regularizer for?",
         options: [
-          { id: "a", text: "It has many peaks, so you must start from several places.", why: "That describes a bumpy surface. This one is a single smooth hill." },
-          { id: "b", text: "It has no peak at all.", why: "It does have one, and that peak is the best answer." },
-          { id: "c", text: "It has a single peak, so there are no local optima to get stuck on.", correct: true },
-          { id: "d", text: "It is always exactly flat.", why: "A flat surface would give no direction to climb." }
+          { id: "a", text: "To make training finish sooner.", why: "That is closer to early stopping, a different idea." },
+          { id: "b", text: "To show that being too confident is a problem and a lot of data is needed to justify it.", correct: true },
+          { id: "c", text: "To add more features to the data.", why: "Features are chosen separately. A regularizer acts on the weights." },
+          { id: "d", text: "To replace the sigmoid.", why: "The sigmoid stays. The regularizer is added next to the loss." }
         ],
-        explain: "It is concave: the only maximum is the global one, so climbing always reaches the best weights."
+        explain: "The lecture frames a regularizer as a way to assert that there is such a thing as being too confident, so a lot of data is needed to overcome it."
       }
     }
   ]

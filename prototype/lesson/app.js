@@ -4,26 +4,26 @@
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
 
   /* Concept records. Timestamps stay empty until a transcript is indexed. */
-  const VIDEO = "het9HFqo1TQ";
+  const VIDEO = "abB3fwfPy14";
   const TERMS = {
-    linear: { title: "Linear regression", state: "mastered", def: "Predicts a number as a weighted sum of the inputs. Used on yes-or-no data, one extra example can move the fitted line and the threshold with it.", ts: 3, rel: ["sigmoid", "logreg", "boundary"] },
-    probability: { title: "Probability basics", state: "mastered", def: "A number between 0 and 1 that says how likely an outcome is. Probabilities of all outcomes add up to 1.", ts: null, rel: ["sigmoid"] },
-    sigmoid: { title: "Sigmoid function", state: "review", def: "Also called the logistic function: g(z) = 1 / (1 + e^−z). It crosses 0.5 at z = 0 and keeps every output between 0 and 1.", ts: 2846, rel: ["probability", "logreg", "boundary"] },
-    logreg: { title: "Logistic regression", state: "review", def: "A classifier for yes-or-no labels. It passes a linear score through the logistic function and reads the result as the probability that the label is 1.", ts: 2740, rel: ["linear", "sigmoid", "loglik", "boundary"] },
-    loglik: { title: "Log-likelihood", state: "unseen", def: "The log of how probable the training labels are under the model. Logistic regression picks the weights that maximize it.", ts: 3372, rel: ["logreg", "gd", "reg"] },
-    boundary: { title: "Decision boundary", state: "unseen", def: "The point where the prediction flips from 0 to 1. With a threshold of 0.5, everything on one side is predicted 0 and everything on the other is predicted 1.", ts: 2687, rel: ["logreg", "sigmoid"] },
-    gd: { title: "Gradient ascent", state: "unseen", def: "Like gradient descent but climbing: it steps the weights up the log-likelihood, which is why the update has a plus sign. The log-likelihood of logistic regression has a single peak.", ts: 3586, rel: ["loglik"] },
-    reg: { title: "Regularization", state: "unseen", def: "A penalty on large weights added to the objective, which reduces overfitting. Not covered in this lecture.", ts: null, rel: ["loglik"] }
+    linear: { title: "Linear classifier", state: "mastered", def: "Predicts one label on one side of the line θᵀx + θ₀ = 0 and the other label on the other side. The perceptron is one.", ts: 2, rel: ["sigmoid", "logreg", "boundary"] },
+    probability: { title: "Probability", state: "mastered", def: "A number between 0 and 1 for how likely something is. Logistic regression outputs one instead of a hard yes or no, so it can show where it is unsure.", ts: 321, rel: ["sigmoid", "logreg"] },
+    sigmoid: { title: "Sigmoid function", state: "review", def: "Also called the logistic function: σ(z) = 1 / (1 + e^−z). It is shaped like an S and goes smoothly from close to 0 for very low z to close to 1 for very high z.", ts: 536, rel: ["probability", "logreg", "boundary"] },
+    logreg: { title: "Logistic regression", state: "review", def: "A classification algorithm: the model g(x) = σ(θᵀx + θ₀) gives the probability of a label, and the weights are chosen to give high probability to what really happened.", ts: 55, rel: ["linear", "sigmoid", "loglik", "boundary"] },
+    loglik: { title: "Negative log likelihood loss", state: "unseen", def: "Take the probability the model gave to what really happened, take its log (the best weights stay the same because log keeps the order), then the negative so that a lower loss is better.", ts: 2229, rel: ["logreg", "gd", "reg"] },
+    boundary: { title: "Boundary", state: "unseen", def: "Where θᵀx + θ₀ = 0 the model gives exactly 1/2. That line separates the two predictions: one label on the positive side, the other on the line and below.", ts: 967, rel: ["logreg", "sigmoid"] },
+    gd: { title: "Gradient descent", state: "unseen", def: "A general way to minimize a function by repeatedly stepping against its gradient. You can stop when the loss barely changes or the gradient is very small. The logistic loss is convex, which gives guarantees.", ts: 2663, rel: ["loglik", "reg"] },
+    reg: { title: "Regularization", state: "unseen", def: "A penalty that discourages huge weights. Huge weights push every probability to an extreme, claiming more confidence than the data can justify.", ts: 4044, rel: ["loglik", "gd"] }
   };
   const STATE_LABEL = { mastered: "Mastered", review: "Needs review", unseen: "Not started" };
   const STATE_CLASS = { mastered: "l-m", review: "l-r", unseen: "l-u" };
 
   /* Mastery from the exam (same browser storage the exam writes) */
-  const FROM_EXAM = { boundary: "boundary", sigmoid: "sigmoid", prob: "probability", mle: "loglik", ascent: "gd" };
+  const FROM_EXAM = { uncertainty: "probability", sigmoid: "sigmoid", boundary: "boundary", nll: "loglik", reg: "reg" };
   try {
     const m = JSON.parse(localStorage.getItem("campus-mastery") || "{}");
     Object.entries(FROM_EXAM).forEach(([c, term]) => {
-      const r = m["cs229-l3:" + c]; if (!r || !TERMS[term]) return;
+      const r = m["mit6036-l4:" + c]; if (!r || !TERMS[term]) return;
       TERMS[term].state = r.state;
       const n = $('.g-node[data-term="' + term + '"]');
       if (n) { n.dataset.state = r.state; n.setAttribute("aria-label", TERMS[term].title + ", " + STATE_LABEL[r.state].toLowerCase()); }
