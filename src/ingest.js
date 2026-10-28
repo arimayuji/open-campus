@@ -4,7 +4,7 @@
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { ytInfo, ytHost } from "./ytdlp.js";
-import { parseSource, openLicense, parseCaptions, condense, prompt, windows, validate, uniform, readEpisodes, questionPrompt, validateQuestion, evidenceTime } from "./core.js";
+import { parseSource, openLicense, parseCaptions, condense, prompt, windows, repair, validate, uniform, readEpisodes, questionPrompt, validateQuestion, numberedLines } from "./core.js";
 
 const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const UA = { "User-Agent": "OpenCampus/1.0 (+https://opencampus.dev)" };
@@ -76,6 +76,7 @@ export class IngestLesson extends WorkflowEntrypoint {
 
       if (src.hosted && src.kind === "youtube") {
         await step.do("host-video", { retries: { limit: 1, delay: "30 seconds" }, timeout: "45 minutes" }, async () => {
+          if (await env.MEDIA.head(`media/${src.id}.mp4`)) return true; // already hosted: do not download it again
           await setJob(env, jobId, { step: "downloading and compressing the video" });
           const res = await ytHost(env, src.id);
           if (!res.ok) throw new NonRetryableError("hosting: " + ((await res.json().catch(() => ({}))).error || res.status));
@@ -163,13 +164,13 @@ export class IngestLesson extends WorkflowEntrypoint {
           await setJob(env, jobId, { step: `cutting the lecture into episodes (${i + 1} of ${windows(duration).length})` });
           const text = condense(chunks.filter((c) => c.start >= w.from && c.start < w.to));
           const base = prompt(w.from, w.to, text);
-          const opts = { from: w.from, min: 2, max: 8 };
+          const opts = { from: w.from, min: 2, max: 10 };
           let problems = [];
           for (let attempt = 0; attempt < 3; attempt++) {
             const p = problems.length ? base + "\n\nYour previous answer had these problems, fix them:\n- " + problems.join("\n- ") : base;
             try {
               const out = await env.AI.run(MODEL, { messages: [{ role: "user", content: p }], max_tokens: 3000, temperature: 0.2 });
-              const got = readEpisodes(out.response);
+              const got = repair(readEpisodes(out.response), w.from, w.to);
               problems = validate(got, w.to, opts);
               if (!problems.length) return { episodes: got, review: false };
             } catch (e) { problems = ["could not read your answer as JSON: " + String(e).slice(0, 100)]; }
@@ -185,18 +186,21 @@ export class IngestLesson extends WorkflowEntrypoint {
       const questions = [];
       for (const [i, e] of cuts.episodes.entries()) {
         const q = await step.do(`question-${i}`, { retries: { limit: 1, delay: "5 seconds" }, timeout: "3 minutes" }, async () => {
-          if (cuts.review) return null; // equal-part fallbacks have no real topic to ask about
-          const inside = chunks.filter((c) => c.start >= e.start && c.start < e.end);
-          const text = inside.map((c) => c.text).join(" ").slice(0, 7000);
-          for (let attempt = 0; attempt < 2; attempt++) {
+          if (!e.plain) return null; // equal-part fallbacks have no real topic to ask about
+          const lines = numberedLines(chunks.filter((c) => c.start >= e.start && c.start < e.end)).slice(0, 60);
+          let problems = [];
+          for (let attempt = 0; attempt < 3; attempt++) {
             try {
-              const out = await env.AI.run(MODEL, { messages: [{ role: "user", content: questionPrompt(e.title, text) }], max_tokens: 900, temperature: 0.3 });
+              const ask = questionPrompt(e.title, lines) + (problems.length ? "\n\nYour previous answer had these problems, fix them:\n- " + problems.join("\n- ") : "");
+              const out = await env.AI.run(MODEL, { messages: [{ role: "user", content: ask }], max_tokens: 900, temperature: 0.3 });
               const raw = typeof out.response === "object" ? out.response : JSON.parse(String(out.response).slice(String(out.response).indexOf("{"), String(out.response).lastIndexOf("}") + 1));
-              if (!validateQuestion(raw, text).length) {
+              problems = validateQuestion(raw, lines.length);
+              if (!problems.length) {
+                const at = lines[raw.evidence_line - 1]; // a real line of the transcript, so the minute and the quote are true by construction
                 return { episode: i, question: raw.question.trim(), options: raw.options.map((o) => o.trim()), answer: raw.answer, why: raw.why_wrong.map((w) => w.trim()),
-                  concept: raw.concept.trim(), evidence: raw.evidence.trim(), ts: evidenceTime(raw.evidence, inside, e.start) };
+                  concept: raw.concept.trim(), evidence: at.text, ts: at.start };
               }
-            } catch { /* try once more, then skip this episode */ }
+            } catch (err) { problems = ["answer was not valid JSON"]; }
           }
           return null;
         });

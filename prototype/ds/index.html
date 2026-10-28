@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grove design system</title>
+<meta name="description" content="Tokens, components and motion behind Open Campus. A lesson is a branch you grow.">
+<script>try{var m=localStorage.getItem("campus-mode");if(m==="dark")document.documentElement.dataset.mode="dark"}catch(e){}</script>
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=clash-grotesk@500,600&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./docs.css">
+</head>
+<body>
+<div class="docs">
+  <aside class="docs-rail">
+    <a class="brand" href="../learn/"><span class="brand-mark" id="mark"></span><span>Grove</span></a>
+    <nav aria-label="Sections">
+      <a href="#idea">Idea</a><a href="#colour">Colour</a><a href="#type">Type</a><a href="#space">Space and shape</a><a href="#motion">Motion</a><a href="#components">Components</a><a href="#rules">Rules</a>
+    </nav>
+  </aside>
+  <main class="docs-main">
+    <div class="docs-top"><button type="button" class="chip" id="mode" aria-pressed="false" aria-label="Dark mode"><span class="mode-label">Light</span></button></div>
+    <header>
+      <h1>Grove</h1>
+      <p>The design system of Open Campus. Everything here exists because a lesson is a branch you grow.</p>
+    </header>
+
+    <section class="doc" id="idea">
+      <h2>One idea, used everywhere</h2>
+      <p class="intro">Each episode you finish draws the line to the next. Coming back makes the line thicker. Colour, shape and motion all serve that.</p>
+      <div class="spec">
+        <h3>What follows from it</h3>
+        <p class="use">The arch is the frame for anything you watch. The branch is how progress is shown. Coral is the only signal colour and it marks exactly two things: the node of the logo and what you have grown. Light is for reading, deep conifer is for watching and navigating.</p>
+      </div>
+    </section>
+
+    <section class="doc" id="colour">
+      <h2>Colour</h2>
+      <p class="intro">Every colour is a token. Values below are read live from the page, so they follow the mode.</p>
+      <div class="swatches" id="swatches"></div>
+    </section>
+
+    <section class="doc" id="type">
+      <h2>Type</h2>
+      <p class="intro">Clash Grotesk for headings, Satoshi for reading, Geist Mono for times and figures.</p>
+      <div class="scale">
+        <div><code>display-s</code><span style="font-family:var(--font-display);font-weight:600;font-size:var(--text-display-s);line-height:1.04;letter-spacing:var(--tracking-display)">Sigmoid Function</span></div>
+        <div><code>section</code><span style="font-family:var(--font-display);font-weight:600;font-size:var(--text-section);line-height:1.05;letter-spacing:var(--tracking-display)">The whole lecture</span></div>
+        <div><code>title</code><span style="font-family:var(--font-display);font-weight:600;font-size:var(--text-title)">Introduction to logistic regression</span></div>
+        <div><code>lead</code><span style="font-size:var(--text-lead)">A smooth curve from sure-no to sure-yes.</span></div>
+        <div><code>body</code><span>Logistic regression predicts how likely something is, not just a yes or a no.</span></div>
+        <div><code>mono</code><span style="font-family:var(--font-outlier);font-size:var(--text-sm)">Episode 3 of 10, 8:10 to 11:10</span></div>
+      </div>
+    </section>
+
+    <section class="doc" id="space">
+      <h2>Space and shape</h2>
+      <p class="intro">One spacing scale. Radius is 18px for surfaces, a full pill for anything you press, and the arch for video.</p>
+      <div class="bars">
+        <div><code>space-xs</code><span style="--w:8px"></span></div><div><code>space-md</code><span style="--w:16px"></span></div><div><code>space-lg</code><span style="--w:24px"></span></div>
+        <div><code>space-xl</code><span style="--w:40px"></span></div><div><code>space-2xl</code><span style="--w:64px"></span></div><div><code>space-3xl</code><span style="--w:96px"></span></div>
+      </div>
+    </section>
+
+    <section class="doc" id="motion">
+      <h2>Motion</h2>
+      <p class="intro">Three durations, three easings. Only opacity, transform and stroke move. Reduced motion turns all of it off.</p>
+      <div class="spec">
+        <h3>Tokens</h3>
+        <p class="use"><code>--dur-micro</code> 120ms for hover and press. <code>--dur-short</code> 220ms for state changes. <code>--dur-long</code> 420ms for the branch growing and the episode cross-fade. <code>--ease-out</code> for almost everything, <code>--ease-in-out</code> for loops.</p>
+      </div>
+      <div class="spec">
+        <h3>The branch grows</h3>
+        <p class="use">Finishing an episode draws the vine to the next leaf. Replaying a lesson thickens it, up to four times.</p>
+        <div class="leaf-demo vine-demo"><ol class="branch" id="demo-branch"></ol></div>
+        <div class="row"><button type="button" class="btn" id="grow">Finish an episode</button><button type="button" class="btn" id="thicken">Watch again</button><button type="button" class="btn" id="reset">Reset</button></div>
+      </div>
+      <div class="spec">
+        <h3>Spotlight</h3>
+        <p class="use">A soft coral light follows the pointer inside a tile. It never moves the tile itself.</p>
+        <button type="button" class="tile" id="demo-tile"><span><span class="n">Episode 3, 3 min</span><strong>Sigmoid Function</strong><span class="d">Understanding the sigmoid curve</span></span><div class="meter"><i style="--w:0.5"></i></div></button>
+      </div>
+      <div class="spec">
+        <h3>Episode cross-fade</h3>
+        <p class="use">Changing episode uses the View Transitions API where it exists and swaps instantly where it does not.</p>
+        <div class="morph-demo" id="morph-box"><strong id="morph-title">Sigmoid Function</strong><p id="morph-text">Understanding the sigmoid curve</p></div>
+        <div class="row"><button type="button" class="btn" id="morph-btn">Next episode</button></div>
+      </div>
+      <div class="spec">
+        <h3>Press</h3>
+        <p class="use">Everything you can press shrinks to 97 percent while held. It is the only feedback a pill needs.</p>
+        <div class="row"><button type="button" class="btn btn--solid">Press and hold</button><button type="button" class="chip">Press and hold</button></div>
+      </div>
+    </section>
+
+    <section class="doc" id="components">
+      <h2>Components</h2>
+      <p class="intro">Class names are the contract. Each component below is live.</p>
+
+      <div class="spec"><h3>Button</h3><p class="use">Pill. One solid button per screen, the rest outlined. States: rest, hover, press, focus, disabled.</p>
+        <div class="row"><button type="button" class="btn btn--solid">Mark as watched</button><button type="button" class="btn">Next episode</button><button type="button" class="btn" disabled>Disabled</button></div></div>
+
+      <div class="spec"><h3>Chip and key</h3><p class="use">Small controls in the top bar. Show the shortcut in a key.</p>
+        <div class="row"><button type="button" class="chip">Jump to <kbd>Ctrl K</kbd></button><button type="button" class="chip">Light</button></div></div>
+
+      <div class="spec"><h3>Plain words</h3><p class="use">The reason this product exists: an everyday explanation, set large. Coral node on the rule, label in accent ink.</p>
+        <blockquote class="plain" style="margin:0"><p class="plain-label">In plain words</p><p>The sigmoid is a squeezing machine: whatever number goes in, a number between 0 and 1 comes out, like a dimmer that never goes past off or on.</p></blockquote></div>
+
+      <div class="spec"><h3>Arch</h3><p class="use">The frame for anything you watch. It crops the top corners of the video into the arch of the logo.</p>
+        <div class="on-deep"><div class="arch" style="max-width:28rem"><div class="poster"><button type="button" class="play" aria-label="Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></button><p class="poster-hint">Plays 8:10 to 11:10</p></div></div></div></div>
+
+      <div class="spec"><h3>Leaf</h3><p class="use">One episode on the branch. Hollow when waiting, ringed when current, filled coral when watched, outlined in light when answered right.</p>
+        <div class="leaf-demo vine-demo"><ol class="branch" id="leaf-states"></ol></div></div>
+
+      <div class="spec"><h3>Tile and meter</h3><p class="use">An episode in the bento. The meter fills with how much you have grown it.</p>
+        <div class="row"><button type="button" class="tile" style="width:18rem"><span><span class="n">Episode 1, 3 min</span><strong>Introduction</strong><span class="d">Logistic regression basics</span></span><div class="meter"><i style="--w:1"></i></div></button>
+        <button type="button" class="tile" style="width:18rem" data-state="done"><span><span class="n">Episode 2, 3 min</span><strong>Linear Separability</strong><span class="d">Dealing with non-linear data</span></span><div class="meter"><i style="--w:1"></i></div></button></div></div>
+
+      <div class="spec"><h3>Answer option</h3><p class="use">Right is outlined in accent ink with a coral wash. Wrong is dashed, never red: a wrong answer is not an alarm.</p>
+        <div class="row" style="align-items:stretch"><button type="button" class="q-opt" style="width:16rem"><i>A</i><span>It stays between 0 and 1</span></button><button type="button" class="q-opt" data-result="right" style="width:16rem"><i>B</i><span>It stays between 0 and 1</span></button><button type="button" class="q-opt" data-result="wrong" style="width:16rem"><i>C</i><span>It is always one half</span></button></div></div>
+
+      <div class="spec"><h3>Citation</h3><p class="use">A pill with the time a claim was said. Pressing it plays the lecture there.</p>
+        <p>The sigmoid squashes any number into the range 0 to 1 <button type="button" class="cite">9:00</button></p></div>
+    </section>
+
+    <section class="doc" id="rules">
+      <h2>Rules</h2>
+      <div class="do">
+        <div><h3>Do</h3><ul><li>Use coral only for growth and the logo node.</li><li>Show progress as the branch, not as a bar.</li><li>Keep text in plain words before technical ones.</li><li>Give every control a visible focus ring.</li><li>Pair a colour change with a shape change.</li></ul></div>
+        <div><h3>Do not</h3><ul><li>Fill buttons with coral.</li><li>Use red for a wrong answer.</li><li>Add a second accent colour.</li><li>Animate width, height, top or left.</li><li>Move anything when reduced motion is on.</li></ul></div>
+      </div>
+    </section>
+  </main>
+</div>
+<template id="logo"><svg viewBox="0 0 96 96" aria-hidden="true"><path d="M18 84V46C18 24 34 12 50 12C68 12 80 26 80 44" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/><path d="M50 84C50 66 44 58 36 52C30 47 30 40 36 36C42 32 52 36 52 44C52 52 62 54 70 62" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="80" cy="60" r="7" class="node" stroke="currentColor" stroke-width="3"/><circle cx="70" cy="62" r="3" fill="currentColor"/><circle cx="50" cy="84" r="4" fill="currentColor"/></svg></template>
+<script src="./ds.js"></script>
+<script src="./docs.js"></script>
+</body>
+</html>

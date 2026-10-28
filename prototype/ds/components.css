@@ -1,0 +1,74 @@
+/* Grove components. Each block is one component; states are hover, active, focus-visible, disabled, selected. */
+.chip { display: inline-flex; align-items: center; gap: var(--space-xs); height: 2.25rem; padding-inline: var(--space-md); border: 1px solid var(--color-rule); border-radius: var(--radius-pill); background: var(--color-paper); color: var(--color-ink-2); font-size: var(--text-sm); cursor: pointer; transition: border-color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out); }
+.chip svg { width: 1rem; height: 1rem; }
+.chip:hover { border-color: var(--color-muted); background: var(--color-paper-2); }
+.chip:active { transform: scale(0.97); }
+.chip:disabled, .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+kbd { font-family: var(--font-outlier); font-size: var(--text-xs); padding: var(--space-3xs) var(--space-xs); border-radius: var(--space-xs); background: var(--color-paper-3); color: var(--color-muted); }
+.node { fill: var(--color-accent); }
+.branch { list-style: none; margin: 0; padding: 0; }
+.leaf { position: relative; }
+.leaf button { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr) 3rem; align-items: center; width: 100%; min-height: 4rem; padding: 0; border: 0; background: none; color: var(--color-deep-muted); text-align: left; cursor: pointer; border-radius: var(--radius-card); transition: color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out); }
+.leaf button:hover { color: var(--color-deep-ink); background: color-mix(in oklab, var(--color-deep-2) 70%, transparent); }
+.leaf button:focus-visible { outline-color: var(--color-accent); }
+.leaf[aria-current="step"] button { color: var(--color-deep-ink); }
+.leaf .t { font-size: var(--text-sm); line-height: 1.3; padding-block: var(--space-xs); }
+.leaf .m { font-family: var(--font-outlier); font-size: var(--text-xs); padding-right: var(--space-xs); text-align: right; }
+.vine { width: 2.25rem; height: 4rem; overflow: visible; }
+.vine .base { fill: none; stroke: var(--color-deep-rule); stroke-linecap: round; }
+.vine .grown { fill: none; stroke: var(--color-accent); stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset var(--dur-long) var(--ease-out), stroke-width var(--dur-short) var(--ease-out); }
+.vine .grown.on { stroke-dashoffset: 0; }
+.vine .bud { fill: var(--color-deep); stroke: var(--color-deep-muted); stroke-width: 2; transition: fill var(--dur-short) var(--ease-out), stroke var(--dur-short) var(--ease-out); }
+.leaf[data-state="done"] .bud { fill: var(--color-accent); stroke: var(--color-accent); }
+.leaf[aria-current="step"] .bud { stroke: var(--color-deep-ink); stroke-width: 3; }
+.vine .halo { fill: none; stroke: var(--color-accent); stroke-width: 1.5; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.leaf[aria-current="step"] .halo { animation: halo 2.4s var(--ease-out) infinite; }
+.arch { position: relative; aspect-ratio: 16 / 9; border-radius: 50% 50% var(--space-sm) var(--space-sm) / 34% 34% var(--space-sm) var(--space-sm); background: var(--color-stage-2); background-size: cover; background-position: center; overflow: hidden; }
+.arch video, .arch iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--color-deep); }
+.poster { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: var(--space-sm); background: linear-gradient(to top, color-mix(in oklab, var(--color-deep) 82%, transparent), color-mix(in oklab, var(--color-deep) 30%, transparent)); }
+.play { display: grid; place-items: center; width: 4.5rem; height: 4.5rem; border: 0; border-radius: var(--radius-pill); background: var(--color-accent); color: var(--color-deep); cursor: pointer; transition: transform var(--dur-short) var(--ease-out); }
+.play:hover { transform: scale(1.06); }
+.play:active { transform: scale(0.97); }
+.play svg { width: 1.75rem; height: 1.75rem; margin-left: var(--space-3xs); }
+.poster-hint { font-size: var(--text-sm); color: var(--color-deep-ink); text-shadow: 0 1px 12px var(--color-deep); }
+.plain { position: relative; margin: var(--space-xl) 0 0; padding: var(--space-lg) 0 var(--space-lg) var(--space-xl); border-left: 2px solid var(--color-rule); }
+.plain::before { content: ""; position: absolute; left: calc(var(--space-3xs) * -4); top: var(--space-lg); width: var(--space-md); height: var(--space-md); border-radius: var(--radius-pill); background: var(--color-accent); box-shadow: 0 0 0 var(--space-xs) var(--color-paper); }
+.plain-label { margin-bottom: var(--space-xs); font-size: var(--text-sm); font-weight: 700; color: var(--color-accent-ink); }
+.plain p:not(.plain-label) { font-size: var(--text-xl); line-height: 1.45; max-width: 36ch; color: var(--color-ink); text-wrap: pretty; }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 2.75rem; padding-inline: var(--space-lg); border: 1px solid var(--color-rule); border-radius: var(--radius-pill); background: var(--color-paper); color: var(--color-ink); font-weight: 500; text-decoration: none; cursor: pointer; transition: background-color var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out); }
+.btn:hover { background: var(--color-paper-2); border-color: var(--color-muted); }
+.btn:active { transform: scale(0.97); }
+.btn--solid { background: var(--color-ink); color: var(--color-paper); border-color: var(--color-ink); }
+.btn--solid:hover { background: var(--color-ink-2); border-color: var(--color-ink-2); }
+.btn--solid[aria-pressed="true"] { background: var(--color-paper); color: var(--color-ink); border-color: var(--color-ink); }
+.tile { --mx: -30rem; --my: -30rem; position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-lg); width: 100%; min-height: 11rem; padding: var(--space-lg); border: 1px solid var(--color-rule); border-radius: var(--radius-card); background: radial-gradient(22rem circle at var(--mx) var(--my), color-mix(in oklab, var(--color-accent) 16%, transparent), transparent 60%), var(--color-paper-2); color: var(--color-ink); text-align: left; text-decoration: none; cursor: pointer; transition: border-color var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out); }
+.tile:hover { border-color: var(--color-accent-ink); }
+.tile:active { transform: scale(0.985); }
+.tile[aria-current="step"] { border-color: var(--color-ink); }
+.tile .n { font-family: var(--font-outlier); font-size: var(--text-xs); color: var(--color-muted); }
+.tile strong { display: block; font-family: var(--font-display); font-size: var(--text-title); font-weight: 600; line-height: 1.15; letter-spacing: var(--tracking-display); }
+.tile span.d { display: block; margin-top: var(--space-2xs); font-size: var(--text-sm); color: var(--color-ink-2); }
+.meter { height: var(--space-2xs); border-radius: var(--radius-pill); background: var(--color-paper-3); overflow: hidden; }
+.meter i { display: block; height: 100%; width: 100%; transform-origin: left; transform: scaleX(var(--w, 0)); background: var(--color-accent); transition: transform var(--dur-long) var(--ease-out); }
+.tile[data-state="done"] .n::after { content: " watched"; color: var(--color-accent-ink); }
+.palette { width: 100%; max-width: 34rem; margin: 12vh auto 0; padding: 0; border: 1px solid var(--color-rule); border-radius: var(--radius-card); background: var(--color-paper); color: var(--color-ink); }
+.palette::backdrop { background: color-mix(in oklab, var(--color-deep) 60%, transparent); backdrop-filter: blur(4px); }
+.palette-box { margin: 0; }
+.palette input { width: 100%; height: 3.5rem; padding-inline: var(--space-lg); border: 0; border-bottom: 1px solid var(--color-rule); background: transparent; color: var(--color-ink); font-size: var(--text-lg); border-radius: var(--radius-card) var(--radius-card) 0 0; }
+.palette input:focus-visible { outline: none; }
+.palette input::-webkit-search-cancel-button { appearance: none; display: none; }
+.palette ul { list-style: none; margin: 0; padding: var(--space-xs); max-height: 22rem; overflow-y: auto; }
+.palette li { display: flex; justify-content: space-between; gap: var(--space-md); padding: var(--space-sm) var(--space-md); border-radius: calc(var(--radius-card) - var(--space-xs)); cursor: pointer; font-size: var(--text-sm); }
+.palette li small { color: var(--color-muted); font-family: var(--font-outlier); }
+.palette li[aria-selected="true"] { background: var(--color-paper-3); }
+.q-opt { display: flex; gap: var(--space-sm); width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--color-rule); border-radius: calc(var(--radius-card) - var(--space-xs)); background: var(--color-paper); color: var(--color-ink); text-align: left; cursor: pointer; transition: border-color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out); }
+.q-opt:hover:not(:disabled) { border-color: var(--color-ink); }
+.q-opt:disabled { cursor: default; }
+.q-opt[data-result="right"] { border-color: var(--color-accent-ink); background: color-mix(in oklab, var(--color-accent) 18%, var(--color-paper)); }
+.q-opt[data-result="wrong"] { border-style: dashed; border-color: var(--color-muted); }
+.q-opt i { font-style: normal; font-family: var(--font-outlier); color: var(--color-muted); }
+.leaf[data-mastered="true"] .bud { stroke: var(--color-deep-ink); stroke-width: 3; }
+.cite { display: inline-flex; align-items: center; height: 1.75rem; padding-inline: var(--space-sm); border: 1px solid var(--color-accent-ink); border-radius: var(--radius-pill); background: none; color: var(--color-accent-ink); font-family: var(--font-outlier); font-size: var(--text-xs); cursor: pointer; }
+.cite:hover { background: color-mix(in oklab, var(--color-accent) 18%, var(--color-paper)); }
+.brand { display: inline-flex; align-items: center; gap: var(--space-sm); width: fit-content; font-family: var(--font-display); font-weight: 600; font-size: var(--text-lg); letter-spacing: var(--tracking-display); text-decoration: none; color: var(--color-deep-ink); }
+.brand-mark svg { width: 2rem; height: 2rem; }

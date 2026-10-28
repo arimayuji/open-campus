@@ -14,7 +14,7 @@
   const get = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const set = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* storage can be blocked */ } };
   const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const morph = (fn) => (document.startViewTransition && !calm ? document.startViewTransition(fn) : fn());
+  const { morph } = window.Grove;
 
   $("#brand-mark").append($("#logo").content.cloneNode(true));
   $("#kbd").textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘ K" : "Ctrl K";
@@ -39,12 +39,7 @@
     return r.json();
   };
 
-  /* A light that follows the pointer across a tile */
-  const spotlight = (tile) => tile.addEventListener("pointermove", (e) => {
-    const r = tile.getBoundingClientRect();
-    tile.style.setProperty("--mx", e.clientX - r.left + "px");
-    tile.style.setProperty("--my", e.clientY - r.top + "px");
-  });
+  const { spotlight } = window.Grove; // from ds/ds.js
 
   /* Palette: actions the current screen offers, plus every episode */
   let actions = [];

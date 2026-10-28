@@ -38,7 +38,19 @@ const stamp = (t) => {
   return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p[0] * 60 + p[1];
 };
 
-/** WebVTT or SRT text -> [{start, text}] in whole seconds. Tags and duplicate rolling lines are removed. */
+const ENT = { "&nbsp;": " ", "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'", "&apos;": "'" };
+const decode = (t) => t.replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/g, (m) => ENT[m]).replace(/\s+/g, " ").trim();
+
+/** Auto captions roll: each line repeats the end of the one before. Return only what is new. */
+export function newWords(prev, next) {
+  const a = prev.split(" "), b = next.split(" ");
+  for (let k = Math.min(a.length, b.length, 24); k > 0; k--) {
+    if (a.slice(-k).join(" ") === b.slice(0, k).join(" ")) return b.slice(k).join(" ");
+  }
+  return next;
+}
+
+/** WebVTT or SRT text -> [{start, text}] in whole seconds. Tags, entities and rolling repeats are removed. */
 export function parseCaptions(text) {
   const out = [];
   let last = "";
@@ -47,10 +59,15 @@ export function parseCaptions(text) {
     const i = lines.findIndex((l) => l.includes("-->"));
     if (i < 0) continue;
     const start = stamp(lines[i].split("-->")[0].trim().split(" ")[0]);
-    const body = lines.slice(i + 1).join(" ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
-    if (!body || body === last || !Number.isFinite(start)) continue;
-    last = body;
-    out.push({ start: Math.floor(start), text: body });
+    if (!Number.isFinite(start)) continue;
+    let fresh = "";
+    for (const raw of lines.slice(i + 1)) {
+      const line = decode(raw.replace(/<[^>]+>/g, ""));
+      if (!line) continue;
+      const add = newWords(last, line);
+      if (add) { fresh += (fresh ? " " : "") + add; last = line; }
+    }
+    if (fresh) out.push({ start: Math.floor(start), text: fresh });
   }
   return out;
 }
@@ -70,7 +87,7 @@ export function prompt(from, to, text) {
   return `You cut part of a lecture transcript into short episodes for learners who may be complete beginners, including older adults.
 Return ONLY a JSON object, no other text: {"episodes":[{"title":"","lead":"","plain":"","start":0,"end":0}]}
 Rules:
-- Each episode is ${MIN_S / 60} to ${MAX_S / 60} minutes long. Cut at real topic changes. Skip greetings, course admin and long question-and-answer sessions.
+- Each episode is ${MIN_S / 60} to ${MAX_S / 60} minutes long, that is ${MIN_S} to ${MAX_S} seconds between start and end. Never shorter than ${MIN_S} seconds. Cut at real topic changes. Skip greetings, course admin and long question-and-answer sessions.
 - start and end are whole seconds taken from the timestamps below. Episodes are in order and do not overlap.
 - Cover the whole excerpt, from second ${from} to second ${to}, leaving no gap longer than ${MAX_GAP / 60} minutes.
 - title: at most 6 words, sentence case. lead: one sentence of at most 15 words.
@@ -109,6 +126,25 @@ export function validate(eps, to, { from = 0, min = 4, max = 16 } = {}) {
   return bad;
 }
 
+/** Fix what a model gets wrong most: episodes shorter than the minimum are merged into a neighbour. */
+export function repair(eps, from, to) {
+  if (!Array.isArray(eps)) return eps;
+  let list = eps
+    .filter((e) => e && Number.isFinite(Number(e.start)) && Number.isFinite(Number(e.end)))
+    .map((e) => ({ ...e, start: Math.max(from, Math.round(Number(e.start))), end: Math.min(to, Math.round(Number(e.end))) }))
+    .filter((e) => e.end > e.start)
+    .sort((a, b) => a.start - b.start);
+  for (let guard = 0; guard < 50; guard++) {
+    const i = list.findIndex((e) => e.end - e.start < MIN_S);
+    if (i < 0 || list.length < 2) break;
+    const j = i === list.length - 1 ? i - 1 : (i > 0 && list[i - 1].end - list[i - 1].start < list[i + 1].end - list[i + 1].start ? i - 1 : i + 1);
+    const [a, b] = j < i ? [list[j], list[i]] : [list[i], list[j]];
+    const keep = a.end - a.start >= b.end - b.start ? a : b;
+    list.splice(Math.min(i, j), 2, { ...keep, start: Math.min(a.start, b.start), end: Math.max(a.end, b.end) });
+  }
+  return list;
+}
+
 /** Last resort: equal parts, flagged for a human. */
 export function uniform(to, size = 420, from = 0) {
   const span = to - from, n = Math.max(1, Math.round(span / size)), step = Math.floor(span / n);
@@ -131,23 +167,34 @@ export function readEpisodes(out) {
 
 export const norm = (s) => String(s).toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
 
-export function questionPrompt(title, text) {
+/** Number the episode's transcript in lines of about 15 seconds so the model can point at one instead of quoting it. */
+export function numberedLines(chunks, span = 15) {
+  const out = [];
+  let cur = null;
+  for (const c of chunks) {
+    if (!cur || c.start - cur.start >= span) { cur = { start: c.start, text: "" }; out.push(cur); }
+    cur.text += (cur.text ? " " : "") + c.text;
+  }
+  return out;
+}
+
+export function questionPrompt(title, lines) {
   return `You write one multiple-choice question for a learner who just watched a lecture episode called "${title}".
 Return ONLY a JSON object, no other text:
-{"question":"","options":["","","",""],"answer":0,"why_wrong":["","","",""],"concept":"","evidence":""}
+{"question":"","options":["","","",""],"answer":0,"why_wrong":["","","",""],"concept":"","evidence_line":1}
 Rules:
 - Test understanding of one idea the episode actually explains. No trick questions, no questions about things the episode does not say.
 - Exactly 4 options, plain words. "answer" is the index (0 to 3) of the single correct option.
 - why_wrong has 4 entries. For each wrong option, one sentence naming the misunderstanding that makes it tempting and what is true instead. For the correct option, one sentence saying why it is right.
 - concept: the name of the idea in at most 4 words.
-- evidence: ONE sentence copied word for word from the transcript below that supports the correct answer.
+- evidence_line: the number of the transcript line below where the lecturer says what makes the correct answer right.
 
-Transcript of the episode:
-${text}`;
+Transcript of the episode, one numbered line per passage:
+${lines.map((l, i) => `[${i + 1}] ${l.text}`).join("\n")}`;
 }
 
-/** Problems with a generated question. episodeText is the transcript of that episode. Empty list = keep it. */
-export function validateQuestion(q, episodeText) {
+/** Problems with a generated question. nLines is how many numbered lines the model was shown. Empty list = keep it. */
+export function validateQuestion(q, nLines) {
   const bad = [];
   if (!q || typeof q.question !== "string" || q.question.trim().length < 10 || q.question.length > 300) bad.push("question missing or too long");
   if (!Array.isArray(q?.options) || q.options.length !== 4 || q.options.some((o) => typeof o !== "string" || !o.trim() || o.length > 200)) bad.push("need exactly 4 options");
@@ -155,21 +202,8 @@ export function validateQuestion(q, episodeText) {
   if (!Number.isInteger(q?.answer) || q.answer < 0 || q.answer > 3) bad.push("answer must be 0 to 3");
   if (!Array.isArray(q?.why_wrong) || q.why_wrong.length !== 4 || q.why_wrong.some((w) => typeof w !== "string" || !w.trim() || w.length > 260)) bad.push("why_wrong needs 4 short entries");
   if (typeof q?.concept !== "string" || !q.concept.trim() || q.concept.length > 40) bad.push("concept missing");
-  const ev = norm(q?.evidence ?? "");
-  if (ev.split(" ").length < 4) bad.push("evidence too short");
-  else if (!norm(episodeText).includes(ev)) bad.push("evidence is not a verbatim sentence of the transcript");
+  if (!Number.isInteger(q?.evidence_line) || q.evidence_line < 1 || q.evidence_line > nLines) bad.push(`evidence_line must be a number from 1 to ${nLines}`);
   return bad;
-}
-
-/** Where in the lecture the evidence is said: start of the first chunk holding its opening words. */
-export function evidenceTime(evidence, chunks, fallback) {
-  const head = norm(evidence).split(" ").slice(0, 6).join(" ");
-  const one = chunks.find((c) => norm(c.text).includes(head));
-  if (one) return one.start;
-  for (let i = 0; i < chunks.length - 1; i++) {
-    if (norm(chunks[i].text + " " + chunks[i + 1].text).includes(head)) return chunks[i].start; // sentence starts inside the earlier chunk
-  }
-  return fallback;
 }
 
 // ---- Professor: answers only from retrieved lecture passages, with checked citations -------------

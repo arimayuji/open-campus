@@ -1,0 +1,2 @@
+/* Grove motion. Three durations, three easings, and the few things allowed to move. */
+@keyframes halo { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(2.4); } }

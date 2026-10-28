@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { passages, bm25, checkAnswer, norm, validateQuestion, evidenceTime, windows, parseSource, openLicense, parseCaptions, condense, validate, uniform, readEpisodes } from "../src/core.js";
+import { newWords, numberedLines, repair, passages, bm25, checkAnswer, norm, validateQuestion, windows, parseSource, openLicense, parseCaptions, condense, validate, uniform, readEpisodes } from "../src/core.js";
 
 test("parseSource accepts known hosts only", () => {
   assert.deepEqual(parseSource("https://www.youtube.com/watch?v=abB3fwfPy14&t=3"), { kind: "youtube", id: "abB3fwfPy14" });
@@ -64,22 +64,21 @@ test("windows tile the lecture", () => {
   assert.equal(windows(900).length, 1);
 });
 
-const TEXT = "So the sigmoid squashes any number into the range zero to one. That is why we can read it as a probability.";
 const Q = { question: "Why can the output of the sigmoid be read as a probability?", options: ["It always lands between zero and one", "It is always exactly one half", "It can be negative", "It never changes"], answer: 0,
-  why_wrong: ["Right: it is squashed into zero to one.", "Only at the middle point.", "It never goes below zero.", "It changes smoothly with the input."], concept: "Sigmoid range",
-  evidence: "That is why we can read it as a probability." };
-test("validateQuestion keeps a grounded question", () => assert.deepEqual(validateQuestion(Q, TEXT), []));
-test("validateQuestion rejects invented evidence and bad shapes", () => {
-  assert.ok(validateQuestion({ ...Q, evidence: "The sigmoid was invented in 1838 by Verhulst." }, TEXT).some((p) => p.includes("verbatim")));
-  assert.ok(validateQuestion({ ...Q, options: ["a", "a", "b", "c"] }, TEXT).length);
-  assert.ok(validateQuestion({ ...Q, answer: 4 }, TEXT).length);
-  assert.ok(validateQuestion({ ...Q, why_wrong: ["x"] }, TEXT).length);
-  assert.ok(validateQuestion(null, TEXT).length);
+  why_wrong: ["Right: it is squashed into zero to one.", "Only at the middle point.", "It never goes below zero.", "It changes smoothly with the input."], concept: "Sigmoid range", evidence_line: 2 };
+test("validateQuestion keeps a well formed question", () => assert.deepEqual(validateQuestion(Q, 5), []));
+test("validateQuestion rejects bad shapes and out of range evidence", () => {
+  assert.ok(validateQuestion({ ...Q, evidence_line: 9 }, 5).length);
+  assert.ok(validateQuestion({ ...Q, evidence_line: 0 }, 5).length);
+  assert.ok(validateQuestion({ ...Q, evidence_line: "2" }, 5).length);
+  assert.ok(validateQuestion({ ...Q, options: ["a", "a", "b", "c"] }, 5).length);
+  assert.ok(validateQuestion({ ...Q, answer: 4 }, 5).length);
+  assert.ok(validateQuestion({ ...Q, why_wrong: ["x"] }, 5).length);
+  assert.ok(validateQuestion(null, 5).length);
 });
-test("evidenceTime finds the chunk", () => {
-  const ch = [{ start: 10, text: "so the sigmoid squashes" }, { start: 14, text: "any number into the range zero to one" }, { start: 20, text: "that is why we can read it as a probability" }];
-  assert.equal(evidenceTime("That is why we can read it as a probability.", ch, 0), 20);
-  assert.equal(evidenceTime("Nothing like this here at all.", ch, 7), 7);
+test("numberedLines groups captions by time", () => {
+  const l = numberedLines([{ start: 0, text: "a" }, { start: 5, text: "b" }, { start: 16, text: "c" }]);
+  assert.deepEqual(l, [{ start: 0, text: "a b" }, { start: 16, text: "c" }]);
 });
 
 const CH = [{ start: 0, text: "welcome everyone today we talk about logistic regression" }, { start: 50, text: "the sigmoid squashes any number into zero to one" },
@@ -97,4 +96,20 @@ test("checkAnswer enforces real citations", () => {
   assert.ok(!checkAnswer("It squashes numbers [999].", found).ok);
   assert.ok(!checkAnswer("It squashes numbers.", found).ok);
   assert.ok(!checkAnswer("NOT COVERED", found).ok);
+});
+
+test("repair merges short episodes and keeps the bigger one's text", () => {
+  const e = (s, t, title) => ({ title, lead: "L", plain: "P", start: s, end: t });
+  const out = repair([e(0, 100, "short"), e(100, 400, "big"), e(400, 460, "tiny"), e(460, 800, "next")], 0, 800);
+  assert.deepEqual(out.map((x) => [x.start, x.end, x.title]), [[0, 400, "big"], [400, 800, "next"]]);
+  assert.deepEqual(validate(out, 800, { from: 0, min: 2, max: 10 }), []);
+  assert.deepEqual(repair([e(-5, 300, "a"), e(300, 9999, "b")], 0, 800).map((x) => [x.start, x.end]), [[0, 300], [300, 800]]);
+  assert.equal(repair("nope", 0, 1), "nope");
+});
+
+test("parseCaptions removes rolling repeats and entities", () => {
+  const vtt = "WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nso the sigmoid\nso the sigmoid squashes&nbsp;numbers\n\n00:00:03.000 --> 00:00:05.000\nso the sigmoid squashes numbers\ninto zero to one &amp; back";
+  assert.deepEqual(parseCaptions(vtt), [{ start: 1, text: "so the sigmoid squashes numbers" }, { start: 3, text: "into zero to one & back" }]);
+  assert.equal(newWords("a b c", "b c d e"), "d e");
+  assert.equal(newWords("a b c", "x y"), "x y");
 });

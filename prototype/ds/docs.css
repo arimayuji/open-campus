@@ -1,0 +1,44 @@
+/* Hallmark · shape: app screen (Grove docs) · genre: modern-minimal · theme: custom · job: try · idea: "A lesson is a branch you grow: each episode you finish draws the line to the next, and coming back makes it thicker." · vibe: "living tissue, night greenhouse, precise"
+ * paper: oklch(96.8% 0.010 150) · accent: oklch(72% 0.15 35) · display: Clash Grotesk · body: Satoshi · hero: a deep rail of anchors beside the specimens · nav: left rail · footer: none · imagery: the components themselves · signature: live specimens that replay their motion
+ * axes: light/grotesk-sans/warm · posture: restrained · contrast: pass · fold: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V4 · weakest: S, a reference page is dense by nature, so rhythm comes from the rules between sections */
+@import url("./ds.css");
+
+.docs { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); min-height: 100dvh; max-width: var(--container); margin-inline: auto; }
+.docs-rail { position: sticky; top: 0; align-self: start; height: 100dvh; overflow-y: auto; padding: var(--space-lg); background: var(--color-deep); color: var(--color-deep-ink); display: flex; flex-direction: column; gap: var(--space-lg); }
+.docs-rail .brand { color: var(--color-deep-ink); }
+.docs-rail nav { display: grid; gap: var(--space-3xs); }
+.docs-rail nav a { padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-pill); color: var(--color-deep-muted); text-decoration: none; font-size: var(--text-sm); transition: color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out); }
+.docs-rail nav a:hover, .docs-rail nav a[aria-current="true"] { color: var(--color-deep-ink); background: var(--color-deep-2); }
+.docs-main { min-width: 0; padding: var(--space-xl) var(--gutter) var(--space-3xl); max-width: 62rem; }
+.docs-main > header h1 { font-size: var(--text-display-s); font-weight: 600; line-height: 1.04; letter-spacing: var(--tracking-display); }
+.docs-main > header p { margin-top: var(--space-sm); font-size: var(--text-lead); color: var(--color-ink-2); max-width: 38ch; }
+.docs-top { display: flex; justify-content: flex-end; margin-bottom: var(--space-lg); }
+section.doc { margin-top: var(--space-3xl); padding-top: var(--space-lg); border-top: 1px solid var(--color-rule); scroll-margin-top: var(--space-lg); }
+section.doc > h2 { font-size: var(--text-section); font-weight: 600; line-height: 1.05; letter-spacing: var(--tracking-display); }
+section.doc > .intro { margin-top: var(--space-sm); font-size: var(--text-lead); color: var(--color-ink-2); max-width: 44ch; }
+.spec { margin-top: var(--space-lg); padding: var(--space-lg); border: 1px solid var(--color-rule); border-radius: var(--radius-card); display: grid; gap: var(--space-md); }
+.spec h3 { font-size: var(--text-lg); font-weight: 600; }
+.spec .use { font-size: var(--text-sm); color: var(--color-muted); max-width: 60ch; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
+.on-deep { padding: var(--space-lg); border-radius: var(--radius-card); background: var(--color-deep); color: var(--color-deep-ink); }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: var(--space-sm); margin-top: var(--space-lg); }
+.sw { border: 1px solid var(--color-rule); border-radius: var(--radius-card); overflow: hidden; font-size: var(--text-sm); }
+.sw i { display: block; height: 4rem; background: var(--c); }
+.sw b { display: block; padding: var(--space-xs) var(--space-sm) 0; font-weight: 500; }
+.sw code { display: block; padding: 0 var(--space-sm) var(--space-xs); font-family: var(--font-outlier); font-size: var(--text-xs); color: var(--color-muted); overflow-wrap: anywhere; }
+.scale { display: grid; gap: var(--space-xs); margin-top: var(--space-lg); }
+.scale div { display: grid; grid-template-columns: 7rem minmax(0, 1fr); align-items: baseline; gap: var(--space-md); }
+.scale code { font-family: var(--font-outlier); font-size: var(--text-xs); color: var(--color-muted); }
+.bars { display: grid; gap: var(--space-xs); margin-top: var(--space-lg); }
+.bars div { display: grid; grid-template-columns: 7rem minmax(0, 1fr); align-items: center; gap: var(--space-md); }
+.bars span { height: var(--space-sm); border-radius: var(--radius-pill); background: var(--color-ink); width: var(--w); }
+.bars code { font-family: var(--font-outlier); font-size: var(--text-xs); color: var(--color-muted); }
+.do { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-md); margin-top: var(--space-lg); }
+.do ul { margin: 0; padding-left: var(--space-lg); display: grid; gap: var(--space-xs); font-size: var(--text-md); }
+.do h3 { font-size: var(--text-lg); font-weight: 600; margin-bottom: var(--space-xs); }
+.morph-demo { padding: var(--space-md); border-radius: var(--radius-card); background: var(--color-paper-2); min-height: 6rem; view-transition-name: demo; }
+.vine-demo { width: 14rem; }
+.vine-demo .branch { list-style: none; margin: 0; padding: 0; }
+.leaf-demo { background: var(--color-deep); border-radius: var(--radius-card); padding: var(--space-md); color: var(--color-deep-ink); }
+@media (max-width: 60rem) { .docs { grid-template-columns: minmax(0, 1fr); } .docs-rail { position: static; height: auto; } .docs-rail nav { display: flex; flex-wrap: wrap; } .do { grid-template-columns: minmax(0, 1fr); } }

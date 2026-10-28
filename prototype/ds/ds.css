@@ -1,0 +1,8 @@
+/* Hallmark · shape: app screen (Grove design system) · genre: modern-minimal · theme: custom · job: try · idea: "A lesson is a branch you grow: each episode you finish draws the line to the next, and coming back makes it thicker." · vibe: "living tissue, night greenhouse, precise"
+ * paper: oklch(96.8% 0.010 150) · accent: oklch(72% 0.15 35) · display: Clash Grotesk · body: Satoshi · hero: an arch-topped video theatre on a deep conifer rail with the lesson drawn as a branch · nav: left rail that is the branch itself · footer: none (app) · imagery: the product · signature: the branch in the rail that grows and thickens as you watch
+ * axes: light/grotesk-sans/warm · posture: restrained · contrast: pass · fold: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V4 · weakest: S, only two product screens use it so far */
+@import url("./tokens.css");
+@import url("./base.css");
+@import url("./components.css");
+@import url("./motion.css");
