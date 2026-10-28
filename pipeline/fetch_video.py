@@ -57,6 +57,27 @@ def r2(*args):
     run(["npx", "--yes", "wrangler@4", "r2", "object", *args, "--remote"])
 
 
+def publish(url, m, height=720):
+    """Download, compress, upload and write the credit. Call only after is_open() passed."""
+    if not is_open(m.get("license")):
+        sys.exit("Refused: not an open licence.")
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        run(["yt-dlp", "--no-playlist", "-f", f"bv*[height<={height}]+ba/b[height<={height}]",
+             "--merge-output-format", "mp4", "-o", str(tmp / "raw.%(ext)s"), url])
+        raw = next(tmp.glob("raw.*"))
+        out = tmp / "out.mp4"
+        compress(raw, out, height)
+        print(f"{raw.stat().st_size / 1e6:.1f} MB -> {out.stat().st_size / 1e6:.1f} MB")
+        r2("put", f"{BUCKET}/media/{m['id']}.mp4", "--file", str(out), "--content-type", "video/mp4")
+    credit = {"id": m["id"], "title": m.get("title"), "creator": m.get("channel"), "license": m.get("license"),
+              "source": f"https://www.youtube.com/watch?v={m['id']}", "hosted_on": str(date.today()),
+              "note": "Hosted under the licence above. Remove on request."}
+    (ROOT / "content" / "credits").mkdir(parents=True, exist_ok=True)
+    (ROOT / "content" / "credits" / f"{m['id']}.json").write_text(json.dumps(credit, indent=1, ensure_ascii=False), encoding="utf-8")
+    return credit
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("url", nargs="?")
@@ -86,20 +107,7 @@ def main():
         print("Allowed. Run again with --upload to publish it.")
         return
 
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp = Path(tmp)
-        run(["yt-dlp", "--no-playlist", "-f", f"bv*[height<={a.height}]+ba/b[height<={a.height}]",
-             "--merge-output-format", "mp4", "-o", str(tmp / "raw.%(ext)s"), a.url])
-        raw = next(tmp.glob("raw.*"))
-        out = tmp / "out.mp4"
-        compress(raw, out, a.height)
-        print(f"{raw.stat().st_size / 1e6:.1f} MB -> {out.stat().st_size / 1e6:.1f} MB")
-        r2("put", f"{BUCKET}/media/{m['id']}.mp4", "--file", str(out), "--content-type", "video/mp4")
-
-    credit = {"id": m["id"], "title": m.get("title"), "creator": m.get("channel"), "license": lic,
-              "source": f"https://www.youtube.com/watch?v={m['id']}", "hosted_on": str(date.today()),
-              "note": "Hosted under the licence above. Remove on request."}
-    (ROOT / "content" / "credits" / f"{m['id']}.json").write_text(json.dumps(credit, indent=1, ensure_ascii=False), encoding="utf-8")
+    publish(a.url, m, a.height)
     print(f'Done. In the lesson set data-media="/media/{m["id"]}.mp4" and show the credit from content/credits/{m["id"]}.json')
 
 
