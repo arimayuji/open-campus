@@ -7,7 +7,7 @@ POST /api/submit  (admin token)
         |
    Workflow "ingest-lesson"  (durable steps, automatic retries)
         |
-   source ----- YouTube: oEmbed only (title, author, embeddable). No licence data, so embed or link only.
+   source ----- YouTube: yt-dlp in a Cloudflare Container (licence, length, embed flag, captions).
         |        Internet Archive: metadata API. Hosted only if the licence is Creative Commons without
         |        NoDerivatives, or public domain. Anything else is refused.
         |
@@ -25,10 +25,13 @@ GET  /api/lessons, /api/lessons/:id             <- public, published only
 GET  /api/jobs/:id                              <- progress
 ```
 
-## Why YouTube is metadata-only
-YouTube answers requests from Cloudflare's network with a bot check (HTTP 429 on the watch page, probed from a Worker). We do not work around it. oEmbed works, so title, author and whether the owner allows embedding are known. The transcript for a YouTube lesson is attached by the person who submits it.
+## YouTube
+A plain Worker `fetch` to YouTube gets a bot check (HTTP 429, probed). yt-dlp running inside a Cloudflare Container does not: the `YtDlp` container (`container/`) returns title, channel, licence, length, the embed flag and the captions as WebVTT. Link in, captions out, nothing on a contributor's computer. The container sleeps when idle.
+If a video has no captions the job stops at `needs_transcript` and the same link can be submitted again with a transcript attached.
+yt-dlp breaks when YouTube changes: rebuild the image regularly (a weekly scheduled deploy is the plan).
 
 ## Needs
+- Docker on the machine that runs `wrangler deploy` (it builds the container image).
 - Secrets: `ADMIN_TOKEN` (submit and publish), `STREAM_TOKEN` (a token limited to Stream read and write).
 - Cloudflare Stream enabled (paid, about $5 per 1,000 minutes stored). Only the hosted Creative Commons path needs it.
 - D1 `open-campus`, Workers AI, Workflows: bindings in `wrangler.jsonc`.

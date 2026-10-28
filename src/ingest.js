@@ -1,8 +1,9 @@
 // Cloud ingest: a link in, a draft lesson out, all on Cloudflare.
 //   source -> (CC archive video) Stream copy -> Stream captions -> episode cuts (Workers AI) -> D1
-// YouTube is metadata-only from here: it blocks datacenter IPs, so its transcript is supplied by a person.
+// YouTube: yt-dlp runs in a Cloudflare Container and returns licence, length, embed flag and captions.
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
+import { ytInfo } from "./ytdlp.js";
 import { parseSource, openLicense, parseCaptions, condense, prompt, validate, uniform, readEpisodes } from "./core.js";
 
 const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
@@ -21,14 +22,16 @@ async function setJob(env, id, patch) {
     .bind(...keys.map((k) => patch[k]), id).run();
 }
 
-async function readSource(src) {
+async function readSource(env, src) {
   if (src.kind === "youtube") {
-    const r = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent("https://www.youtube.com/watch?v=" + src.id)}`, { headers: UA });
-    if (r.status === 404) throw new NonRetryableError("YouTube says this video does not exist.");
-    if (r.status !== 200 && r.status !== 401) throw new Error(`YouTube oEmbed answered ${r.status}`);
-    const j = r.status === 200 ? await r.json() : {};
-    // 401 means the owner turned embedding off: we respect that and will only link out.
-    return { ...src, url: `https://www.youtube.com/watch?v=${src.id}`, title: j.title || src.id, creator: j.author_name || null, license: null, hosted: false, embeddable: r.status === 200 };
+    // yt-dlp runs in a Cloudflare Container: from there YouTube answers, unlike a plain Worker fetch.
+    const j = await ytInfo(env, src.id);
+    const cc = /creative commons/i.test(j.license || "");
+    return {
+      ...src, url: `https://www.youtube.com/watch?v=${src.id}`, title: j.title || src.id, creator: j.channel || null,
+      license: j.license || null, hosted: false, embeddable: j.embeddable !== false, duration: Math.round(j.duration) || null,
+      creativeCommons: cc, vtt: j.vtt || null, note: j.note || null,
+    };
   }
   const r = await fetch(`https://archive.org/metadata/${src.id}`, { headers: UA });
   if (!r.ok) throw new Error(`archive.org answered ${r.status}`);
@@ -55,9 +58,12 @@ export class IngestLesson extends WorkflowEntrypoint {
       await step.do("start", () => setJob(env, jobId, { state: "running", step: "reading the source" }));
       const parsed = parseSource(url);
       if (!parsed) throw new NonRetryableError("Unsupported link.");
-      const src = await step.do("source", RETRY, () => readSource(parsed));
+      const src = await step.do("source", RETRY, async () => {
+        const { vtt, ...meta } = await readSource(env, parsed);
+        return { ...meta, ytChunks: vtt ? parseCaptions(vtt) : null };
+      });
 
-      let chunks = null, uid = null;
+      let chunks = src.ytChunks?.length ? src.ytChunks : null, uid = null;
       if (transcript) {
         chunks = await step.do("supplied-transcript", () => {
           let c;
@@ -125,7 +131,7 @@ export class IngestLesson extends WorkflowEntrypoint {
 
       if (!chunks) {
         await step.do("needs-transcript", () => setJob(env, jobId, { state: "needs_transcript", step: "waiting for a transcript",
-          error: "YouTube does not let servers read its captions. Submit the same link again with the transcript attached (VTT, SRT or JSON)." }));
+          error: ("This video has no captions we could read. Submit the link again with a transcript attached (VTT, SRT or JSON). " + (src.note || "")).slice(0, 600) }));
         return { needsTranscript: true };
       }
 

@@ -1,0 +1,27 @@
+{
+  "name": "open-ai-campus",
+  "version": "1.0.0",
+  "description": "Turn the free AI courses from Stanford, MIT and Oxford into a study platform: video, transcripts, summaries and quizzes for every lesson.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node --test test/core.test.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arimayuji/open-ai-campus.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/arimayuji/open-ai-campus/issues"
+  },
+  "homepage": "https://github.com/arimayuji/open-ai-campus#readme",
+  "dependencies": {
+    "@cloudflare/containers": "^0.3.7"
+  }
+}

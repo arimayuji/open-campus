@@ -2,6 +2,7 @@
 // Only GET and HEAD, only /media/<11-char id>.mp4, byte ranges supported for seeking.
 import { api } from "./api.js";
 export { IngestLesson } from "./ingest.js";
+export { YtDlp } from "./ytdlp.js";
 
 const KEY = /^\/media\/([A-Za-z0-9_-]{11})\.mp4$/;
 
