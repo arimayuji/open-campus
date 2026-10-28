@@ -1,0 +1,34 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Coral (deal 1/3, seed free-open-source-education-platform-9e3c·e0a87411·2026-10-28·r0)
+ * nav: slim top bar, one question per screen · signature: a wrong answer names the misunderstanding behind it and offers the same idea another way · states: choosing, checked, correct, not quite, variant, summary
+ * axes: light/grotesk-sans/warm · posture: restrained · contrast: pass · modes: light+dark · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V4 · weakest: E, the correct and wrong states rely on a border style and a spoken label, not on extra colour, which is deliberate */
+@import url("../lesson/app.css");
+
+.exam { max-width: 40rem; margin: 0 auto; padding: var(--space-xl) var(--space-md) var(--space-3xl); }
+.exam .count { font-size: var(--text-sm); color: var(--color-muted); }
+.exam h1 { font-size: var(--text-2xl); max-width: none; margin-top: var(--space-xs); }
+.q-text { margin-top: var(--space-lg); font-size: var(--text-lg); line-height: 1.4; max-width: none !important; }
+.tag { display: inline-flex; margin-top: var(--space-md); padding: var(--space-3xs) var(--space-sm); border: 1px solid var(--color-rule-2); border-radius: var(--radius-pill); font-size: var(--text-sm); }
+fieldset { border: 0; margin: var(--space-lg) 0 0; padding: 0; display: grid; gap: var(--space-sm); }
+.opt { position: relative; display: flex; gap: var(--space-sm); align-items: flex-start; min-height: 56px; padding: var(--space-sm) var(--space-md); border: 1px solid var(--color-rule-2); border-radius: var(--radius-card); cursor: pointer; line-height: 1.4; transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out); }
+.opt:hover { background: var(--color-paper-2); }
+.opt input { margin-top: var(--space-3xs); width: 18px; height: 18px; accent-color: var(--color-ink); flex: none; }
+.opt:has(input:checked) { border-color: var(--color-ink); box-shadow: inset 0 0 0 1px var(--color-ink); }
+.opt:has(input:focus-visible) { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.opt.is-right { border-color: var(--color-ink); box-shadow: inset 0 0 0 2px var(--color-ink); background: color-mix(in oklab, var(--color-accent) 16%, transparent); }
+.opt.is-wrong { border-style: dashed; border-color: var(--color-ink); }
+.opt .flag { margin-left: auto; padding-left: var(--space-sm); font-size: var(--text-sm); font-weight: 600; white-space: nowrap; }
+.opt.locked { cursor: default; }
+.actions { margin-top: var(--space-lg); display: flex; gap: var(--space-sm); flex-wrap: wrap; }
+.feedback { margin-top: var(--space-lg); display: grid; gap: var(--space-md); }
+.fb { padding: var(--space-md); border: 1px solid var(--color-rule); border-radius: var(--radius-card); background: var(--color-paper-2); }
+.fb h2 { font-size: var(--text-md); max-width: none; line-height: 1.3; }
+.fb p { margin-top: var(--space-xs); font-size: var(--text-sm); color: var(--color-ink-2); max-width: 60ch; }
+.fb a { font-size: var(--text-sm); }
+.summary { display: grid; gap: var(--space-sm); margin: var(--space-lg) 0 0; padding: 0; list-style: none; }
+.summary li { display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); border: 1px solid var(--color-rule); border-radius: var(--radius-card); }
+.summary svg { width: 16px; height: 16px; flex: none; }
+.summary .l-m { fill: var(--mastered-fill); stroke: var(--color-ink); stroke-width: 1.5; }
+.summary .l-r { fill: var(--color-paper); stroke: var(--color-ink); stroke-width: 1.5; }
+.summary small { margin-left: auto; font-size: var(--text-sm); color: var(--color-muted); text-align: right; }
+.bar-simple { display: flex; align-items: center; justify-content: space-between; height: var(--bar-h); padding-inline: var(--space-lg); border-bottom: 1px solid var(--color-rule); }
