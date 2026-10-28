@@ -165,6 +165,7 @@
       $("#bar-text").textContent = seen.size + " of " + N + " watched";
       const sb = $("#seen"); sb.setAttribute("aria-pressed", String(seen.has(cur))); sb.textContent = seen.has(cur) ? "Watched" : "Mark as watched";
       $("#next").hidden = cur >= N - 1;
+      $("#next").classList.toggle("btn--solid", seen.has(cur)); $("#seen").classList.toggle("btn--solid", !seen.has(cur));
     };
 
     const arch = $("#arch"), poster = $("#poster");
@@ -234,10 +235,13 @@
       });
     };
 
+    const cap = (s) => s ? s[0].toUpperCase() + s.slice(1) : s;
     const render = () => {
       const e = E[cur];
       $("#e-when").textContent = "Episode " + (cur + 1) + " of " + N + ", " + fmt(e.start) + " to " + fmt(e.end);
-      $("#e-title").textContent = e.title;
+      $("#e-title").textContent = cap(e.title);
+      $("#dock-n").textContent = (cur + 1) + " / " + N; $("#dock-t").textContent = cap(e.title);
+      $("#dock-prev").disabled = cur === 0; $("#dock-next").disabled = cur >= N - 1;
       $("#e-lead").textContent = e.lead;
       $("#e-plain").textContent = e.plain || "";
       $("#e-plain-wrap").hidden = !e.plain;
@@ -251,13 +255,17 @@
 
     $("#seen").addEventListener("click", () => { seen.has(cur) ? seen.delete(cur) : seen.add(cur); set(kSeen, JSON.stringify([...seen])); paint(); });
     $("#next").addEventListener("click", () => go(cur + 1));
+    $("#dock").hidden = false;
+    $("#dock-prev").addEventListener("click", () => go(cur - 1));
+    $("#dock-next").addEventListener("click", () => go(cur + 1));
+    $("#dock-mid").addEventListener("click", () => $("#open-palette").click());
     document.addEventListener("keydown", (e) => {
       if (e.metaKey || e.ctrlKey || e.altKey || dlg.open || /INPUT|TEXTAREA/.test(document.activeElement?.tagName)) return;
-      if (e.key === "j") go(cur + 1); else if (e.key === "k") go(cur - 1);
+      if (e.key === "j" || e.key === "ArrowRight") go(cur + 1); else if (e.key === "k" || e.key === "ArrowLeft") go(cur - 1);
     });
 
     actions = [
-      ...E.map((e, i) => ({ label: e.title, hint: "episode " + (i + 1) + ", " + fmt(e.start), run: () => go(i) })),
+      ...E.map((e, i) => ({ label: cap(e.title), hint: "episode " + (i + 1) + ", " + fmt(e.start), run: () => go(i) })),
       { label: "Play this episode", hint: "enter", run: () => play() },
       { label: "Mark this episode as watched", hint: "progress", run: () => $("#seen").click() },
       { label: "Open the original source", hint: "new tab", run: () => window.open(L.source_url, "_blank", "noopener") },
