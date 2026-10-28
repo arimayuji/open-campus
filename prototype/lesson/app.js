@@ -118,7 +118,21 @@
   try { done = JSON.parse(localStorage.getItem(KEYD) || "{}"); } catch (e) { done = {}; }
   const save = () => { try { localStorage.setItem(KEYD, JSON.stringify(done)); } catch (e) { /* storage can be blocked */ } };
   const clipSrc = (s, e, auto) => "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(VID) + "?start=" + s + (e ? "&end=" + e : "") + "&rel=0&modestbranding=1" + (auto ? "&autoplay=1" : "");
+  const MEDIA = slot.dataset.media || "";  // set only for videos hosted under an open licence
+  let vid = null, clipEnd = 0;
   const setClip = (s, e, auto) => {
+    if (MEDIA) {
+      if (!vid) {
+        vid = document.createElement("video");
+        vid.controls = true; vid.preload = "metadata"; vid.playsInline = true; vid.src = MEDIA;
+        vid.addEventListener("timeupdate", () => { if (clipEnd && vid.currentTime >= clipEnd) { vid.pause(); clipEnd = 0; } });
+        slot.appendChild(vid);
+      }
+      clipEnd = e || 0;
+      const go = () => { vid.currentTime = s; if (auto) vid.play().catch(() => {}); };
+      if (vid.readyState > 0) go(); else vid.addEventListener("loadedmetadata", go, { once: true });
+      return;
+    }
     if (!frame) {
       frame = document.createElement("iframe");
       frame.title = "Lecture clip"; frame.allow = "accelerometer; encrypted-media; picture-in-picture"; frame.allowFullscreen = true;

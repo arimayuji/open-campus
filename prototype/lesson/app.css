@@ -109,6 +109,7 @@ progress::-moz-progress-bar { background: var(--color-accent-2); border-radius: 
 
 .video { margin: 0; }
 .video [data-slot] { aspect-ratio: 16 / 9; border: 1px solid var(--color-rule); border-radius: var(--radius-card); display: grid; place-items: center; }
+.video [data-slot] video { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--color-board); }
 .video [data-slot] iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .slot-note { display: grid; gap: var(--space-2xs); justify-items: center; padding: var(--space-lg); text-align: center; color: var(--color-muted); font-size: var(--text-sm); }
 .slot-note svg { width: 40px; height: 40px; color: var(--color-ink); }

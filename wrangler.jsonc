@@ -1,7 +1,9 @@
 {
   "name": "open-campus",
+  "main": "src/worker.js",
   "compatibility_date": "2026-10-01",
-  "assets": { "directory": "./prototype" },
+  "assets": { "directory": "./prototype", "binding": "ASSETS" },
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "open-campus-media" }],
   "routes": [
     { "pattern": "opencampus.dev", "custom_domain": true },
     { "pattern": "www.opencampus.dev", "custom_domain": true }
