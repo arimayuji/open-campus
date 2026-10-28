@@ -3,8 +3,8 @@
 // YouTube: yt-dlp runs in a Cloudflare Container and returns licence, length, embed flag and captions.
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
-import { ytInfo } from "./ytdlp.js";
-import { parseSource, openLicense, parseCaptions, condense, prompt, validate, uniform, readEpisodes } from "./core.js";
+import { ytInfo, ytHost } from "./ytdlp.js";
+import { parseSource, openLicense, parseCaptions, condense, prompt, windows, validate, uniform, readEpisodes } from "./core.js";
 
 const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const UA = { "User-Agent": "OpenCampus/1.0 (+https://opencampus.dev)" };
@@ -29,7 +29,7 @@ async function readSource(env, src) {
     const cc = /creative commons/i.test(j.license || "");
     return {
       ...src, url: `https://www.youtube.com/watch?v=${src.id}`, title: j.title || src.id, creator: j.channel || null,
-      license: j.license || null, hosted: false, embeddable: j.embeddable !== false, duration: Math.round(j.duration) || null,
+      license: j.license || null, hosted: cc, embeddable: j.embeddable !== false, duration: Math.round(j.duration) || null,
       creativeCommons: cc, vtt: j.vtt || null, note: j.note || null,
     };
   }
@@ -74,7 +74,20 @@ export class IngestLesson extends WorkflowEntrypoint {
         });
       }
 
-      if (src.hosted) {
+      if (src.hosted && src.kind === "youtube") {
+        await step.do("host-video", { retries: { limit: 1, delay: "30 seconds" }, timeout: "45 minutes" }, async () => {
+          await setJob(env, jobId, { step: "downloading and compressing the video" });
+          const res = await ytHost(env, src.id);
+          if (!res.ok) throw new NonRetryableError("hosting: " + ((await res.json().catch(() => ({}))).error || res.status));
+          const { readable, writable } = new FixedLengthStream(Number(res.headers.get("Content-Length")));
+          const piping = res.body.pipeTo(writable);
+          await env.MEDIA.put(`media/${src.id}.mp4`, readable, { httpMetadata: { contentType: "video/mp4" }, customMetadata: { license: src.license || "", creator: src.creator || "", source: src.url } });
+          await piping;
+          return true;
+        });
+      }
+
+      if (src.hosted && src.kind === "archive") {
         await step.do("stream-copy", RETRY, async () => {
           await setJob(env, jobId, { step: "copying the video to Cloudflare Stream" });
           const r = await stream(env, "/copy", {
@@ -142,21 +155,31 @@ export class IngestLesson extends WorkflowEntrypoint {
         return true; // a step must return plain data, not the R2 object
       });
 
-      const cuts = await step.do("cuts", { retries: { limit: 1, delay: "5 seconds" }, timeout: "5 minutes" }, async () => {
-        await setJob(env, jobId, { step: "cutting the lecture into episodes" });
-        const base = prompt(duration, condense(chunks));
-        let problems = [];
-        for (let attempt = 0; attempt < 3; attempt++) {
-          const p = problems.length ? base + "\n\nYour previous answer had these problems, fix them:\n- " + problems.join("\n- ") : base;
-          try {
-            const out = await env.AI.run(MODEL, { messages: [{ role: "user", content: p }], max_tokens: 4096, temperature: 0.2 });
-            const eps = readEpisodes(out.response);
-            problems = validate(eps, duration);
-            if (!problems.length) return { episodes: eps, review: false };
-          } catch (e) { problems = ["could not read your answer as JSON: " + String(e).slice(0, 100)]; }
-        }
-        return { episodes: uniform(duration), review: true };
-      });
+      // One window at a time: a small prompt per 25 minutes, each validated, so any length of lecture works.
+      const eps = [];
+      let review = false;
+      for (const [i, w] of windows(duration).entries()) {
+        const part = await step.do(`cuts-${i}`, { retries: { limit: 1, delay: "5 seconds" }, timeout: "5 minutes" }, async () => {
+          await setJob(env, jobId, { step: `cutting the lecture into episodes (${i + 1} of ${windows(duration).length})` });
+          const text = condense(chunks.filter((c) => c.start >= w.from && c.start < w.to));
+          const base = prompt(w.from, w.to, text);
+          const opts = { from: w.from, min: 2, max: 8 };
+          let problems = [];
+          for (let attempt = 0; attempt < 3; attempt++) {
+            const p = problems.length ? base + "\n\nYour previous answer had these problems, fix them:\n- " + problems.join("\n- ") : base;
+            try {
+              const out = await env.AI.run(MODEL, { messages: [{ role: "user", content: p }], max_tokens: 3000, temperature: 0.2 });
+              const got = readEpisodes(out.response);
+              problems = validate(got, w.to, opts);
+              if (!problems.length) return { episodes: got, review: false };
+            } catch (e) { problems = ["could not read your answer as JSON: " + String(e).slice(0, 100)]; }
+          }
+          return { episodes: uniform(w.to, 420, w.from), review: true };
+        });
+        eps.push(...part.episodes);
+        review ||= part.review;
+      }
+      const cuts = { episodes: eps, review };
 
       await step.do("save", async () => {
         await env.DB.prepare(

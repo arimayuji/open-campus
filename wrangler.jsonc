@@ -7,7 +7,7 @@
   "d1_databases": [{ "binding": "DB", "database_name": "open-campus", "database_id": "1e7ac504-1ba1-4688-87d4-db986b74a90a", "migrations_dir": "migrations" }],
   "ai": { "binding": "AI" },
   "workflows": [{ "name": "ingest-lesson", "binding": "INGEST", "class_name": "IngestLesson" }],
-  "containers": [{ "class_name": "YtDlp", "image": "./container/Dockerfile", "max_instances": 2, "instance_type": "basic" }],
+  "containers": [{ "class_name": "YtDlp", "image": "./container/Dockerfile", "max_instances": 2, "instance_type": "standard-1" }],
   "durable_objects": { "bindings": [{ "name": "YTDLP", "class_name": "YtDlp" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["YtDlp"] }],
   "vars": { "CF_ACCOUNT_ID": "35e69fe7af35640858f66cc92350e2bb" },

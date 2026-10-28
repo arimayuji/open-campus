@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseSource, openLicense, parseCaptions, condense, validate, uniform, readEpisodes } from "../src/core.js";
+import { windows, parseSource, openLicense, parseCaptions, condense, validate, uniform, readEpisodes } from "../src/core.js";
 
 test("parseSource accepts known hosts only", () => {
   assert.deepEqual(parseSource("https://www.youtube.com/watch?v=abB3fwfPy14&t=3"), { kind: "youtube", id: "abB3fwfPy14" });
@@ -49,4 +49,17 @@ test("readEpisodes", () => {
   assert.equal(readEpisodes('sure! {"episodes":[1,2]} done').length, 2);
   assert.equal(readEpisodes({ episodes: [1] }).length, 1);
   assert.throws(() => readEpisodes("nothing"));
+});
+
+test("validate demands coverage and limits gaps", () => {
+  const short = [ep(0, 300), ep(300, 600), ep(600, 900), ep(900, 1200)];
+  assert.ok(validate(short, 4800).some((p) => p.includes("cover all")));
+  assert.ok(validate([ep(0, 300), ep(1200, 1500), ep(1500, 1800), ep(1800, 2100)], 2100).some((p) => p.includes("gap")));
+  assert.deepEqual(validate([ep(1500, 1800), ep(1800, 2100), ep(2100, 2400), ep(2400, 2700)], 2700, { from: 1500, min: 2, max: 8 }), []);
+});
+
+test("windows tile the lecture", () => {
+  const w = windows(4874); assert.equal(w[0].from, 0); assert.equal(w.at(-1).to, 4874);
+  w.forEach((x, i) => { if (i) assert.equal(x.from, w[i - 1].to); assert.ok(x.to - x.from <= 1700); });
+  assert.equal(windows(900).length, 1);
 });

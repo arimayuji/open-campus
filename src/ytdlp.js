@@ -13,3 +13,8 @@ export async function ytInfo(env, id, lang = "en") {
   if (!res.ok) throw new Error("yt-dlp: " + (j.error || res.status));
   return j;
 }
+
+/** Download, compress and return the video as a response (only for Creative Commons; the container re-checks). */
+export function ytHost(env, id) {
+  return getContainer(env.YTDLP, "main").fetch(`http://yt/host?id=${encodeURIComponent(id)}`);
+}

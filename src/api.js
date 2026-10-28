@@ -12,7 +12,7 @@ async function isAdmin(req, env) {
   return crypto.subtle.timingSafeEqual(a, b);
 }
 
-const present = (r) => ({ ...r, episodes: JSON.parse(r.episodes), hosted: !!r.hosted, embeddable: !!r.embeddable, needs_review: !!r.needs_review });
+const present = (r) => ({ ...r, media: r.hosted && r.kind === "youtube" ? `/media/${r.id}.mp4` : null, episodes: JSON.parse(r.episodes), hosted: !!r.hosted, embeddable: !!r.embeddable, needs_review: !!r.needs_review });
 const MAX_BODY = 3_000_000; // a long lecture transcript is well under this
 const LEVELS = new Set(["", "intro", "intermediate", "advanced"]);
 

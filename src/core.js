@@ -1,5 +1,7 @@
 // Pure helpers for the cloud ingest: no Cloudflare APIs here, so they run in Node tests too.
 export const MIN_S = 180, MAX_S = 720; // an episode is 3 to 12 minutes
+export const MAX_GAP = 600;           // skipped material between episodes: at most 10 minutes
+const COVER = 0.85;                   // the cuts must reach this share of the span
 
 const YT = /^[A-Za-z0-9_-]{11}$/;
 const FILLER = /\b(um+|uh+|ah+|er+)\b,?\s*/gi;
@@ -64,25 +66,32 @@ export function condense(chunks, span = 30, cap = 220) {
   return lines.map((l) => `[${l.start}] ${l.text.trim().slice(0, cap)}`).join("\n");
 }
 
-export function prompt(duration, text) {
-  return `You cut a lecture transcript into short episodes for learners who may be complete beginners, including older adults.
+export function prompt(from, to, text) {
+  return `You cut part of a lecture transcript into short episodes for learners who may be complete beginners, including older adults.
 Return ONLY a JSON object, no other text: {"episodes":[{"title":"","lead":"","plain":"","start":0,"end":0}]}
 Rules:
 - Each episode is ${MIN_S / 60} to ${MAX_S / 60} minutes long. Cut at real topic changes. Skip greetings, course admin and long question-and-answer sessions.
 - start and end are whole seconds taken from the timestamps below. Episodes are in order and do not overlap.
+- Cover the whole excerpt, from second ${from} to second ${to}, leaving no gap longer than ${MAX_GAP / 60} minutes.
 - title: at most 6 words, sentence case. lead: one sentence of at most 15 words.
 - plain: two or three short sentences using an everyday example and no jargon. It must stay faithful to what the lecture says and invent no facts.
-- Return between 4 and 16 episodes. The lecture is ${duration} seconds long.
 
 Transcript, one line per passage as [seconds] text:
 ${text}`;
 }
 
-/** Problems with a set of cuts; an empty list means they are usable. */
-export function validate(eps, duration) {
-  if (!Array.isArray(eps) || eps.length < 4 || eps.length > 16) return ["need between 4 and 16 episodes"];
+/** Split a lecture into windows of about `size` seconds; a short tail joins the last window. */
+export function windows(duration, size = 1500) {
+  const n = Math.max(1, Math.floor(duration / size));
+  const step = Math.ceil(duration / n);
+  return Array.from({ length: n }, (_, i) => ({ from: i * step, to: Math.min(duration, (i + 1) * step) }));
+}
+
+/** Problems with cuts for the span from..to (whole lecture by default); an empty list means they are usable. */
+export function validate(eps, to, { from = 0, min = 4, max = 16 } = {}) {
+  if (!Array.isArray(eps) || eps.length < min || eps.length > max) return [`need between ${min} and ${max} episodes`];
   const bad = [];
-  let prev = 0;
+  let prev = from;
   eps.forEach((e, k) => {
     const i = k + 1;
     const s = Number(e?.start), t = Number(e?.end);
@@ -90,19 +99,21 @@ export function validate(eps, duration) {
     for (const [key, n] of [["title", 60], ["lead", 140], ["plain", 500]]) {
       if (typeof e[key] !== "string" || !e[key].trim() || e[key].length > n) bad.push(`episode ${i}: ${key} missing or longer than ${n} characters`);
     }
-    if (!(s >= 0 && s < t && t <= duration)) bad.push(`episode ${i}: times outside the video`);
+    if (!(s >= from && s < t && t <= to)) bad.push(`episode ${i}: times outside ${from} to ${to}`);
     else if (t - s < MIN_S || t - s > MAX_S) bad.push(`episode ${i}: length ${t - s}s, must be ${MIN_S} to ${MAX_S}`);
-    if (s < prev - 5) bad.push(`episode ${i}: overlaps the previous one`);
-    prev = t;
+    if (s < prev - 5 && k > 0) bad.push(`episode ${i}: overlaps the previous one`);
+    if (s - prev > MAX_GAP) bad.push(`episode ${i}: leaves a gap of ${s - prev}s, more than ${MAX_GAP}s`);
+    prev = Math.max(prev, t);
   });
+  if (!bad.length && prev < from + COVER * (to - from)) bad.push(`the episodes stop at ${prev}s but the excerpt runs to ${to}s: cover all of it`);
   return bad;
 }
 
 /** Last resort: equal parts, flagged for a human. */
-export function uniform(duration, size = 420) {
-  const n = Math.max(1, Math.round(duration / size)), step = Math.floor(duration / n);
+export function uniform(to, size = 420, from = 0) {
+  const span = to - from, n = Math.max(1, Math.round(span / size)), step = Math.floor(span / n);
   return Array.from({ length: n }, (_, i) => ({
-    title: `Part ${i + 1}`, lead: "", plain: "", start: i * step, end: i === n - 1 ? duration : (i + 1) * step,
+    title: `Part ${i + 1}`, lead: "", plain: "", start: from + i * step, end: i === n - 1 ? to : from + (i + 1) * step,
   }));
 }
 

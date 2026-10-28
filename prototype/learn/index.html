@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson in Open Campus</title>
+<meta name="description" content="A lesson cut into short episodes, each playing only its own part of the lecture.">
+<script>try{var m=localStorage.getItem("campus-mode");if(m==="dark")document.documentElement.dataset.mode="dark"}catch(e){}</script>
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lesson/app.css">
+<link rel="stylesheet" href="./learn.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to lesson</a>
+<div class="app app--learn">
+  <header class="bar">
+    <a class="brand" href="./">Open Campus</a>
+    <div class="bar-tools">
+      <button type="button" class="btn btn--quiet" id="mode" aria-pressed="false" aria-label="Dark mode">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.2 9.6A5.5 5.5 0 0 1 6.4 2.8a5.5 5.5 0 1 0 6.8 6.8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        <span class="mode-label">Light</span>
+      </button>
+    </div>
+  </header>
+
+  <details class="outline" open>
+    <summary>Episodes</summary>
+    <nav class="outline-inner" aria-label="Episodes">
+      <p class="outline-title" id="o-title">Loading</p>
+      <div class="progress">
+        <p id="bar-text">0 watched</p>
+        <progress id="bar-progress" value="0" max="1" aria-labelledby="bar-text"></progress>
+      </div>
+      <div class="module"><ol id="o-list"></ol></div>
+    </nav>
+  </details>
+
+  <main class="main" id="main">
+    <p class="notice" id="notice" hidden></p>
+    <div class="lesson" id="lesson" hidden>
+      <figure class="video">
+        <div data-slot="video" id="video-slot">
+          <div class="slot-note"><p>Pick an episode to play its part of the lecture.</p></div>
+        </div>
+        <figcaption id="credit"></figcaption>
+      </figure>
+      <div id="episodes"></div>
+    </div>
+    <div class="catalog" id="catalog" hidden>
+      <h1>Lessons</h1>
+      <ul class="cards" id="cards"></ul>
+    </div>
+  </main>
+</div>
+<script src="./learn.js"></script>
+</body>
+</html>
