@@ -34,7 +34,11 @@ def check_url(url):
 
 
 def metadata(url):
-    out = run(["yt-dlp", "--skip-download", "--no-playlist", "--dump-json", url], capture_output=True).stdout
+    try:
+        out = run(["yt-dlp", "--skip-download", "--no-playlist", "--dump-json", url], capture_output=True).stdout
+    except subprocess.CalledProcessError as e:
+        sys.exit("Could not read that video. Check that the link is a real video link (not a placeholder). "
+                 + ((e.stderr or "").strip().splitlines() or [""])[-1])
     m = json.loads(out)
     if not ID.match(m.get("id", "")):
         sys.exit("Unexpected video id.")
