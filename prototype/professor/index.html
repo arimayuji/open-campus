@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Ask a question about the lecture and get the exact passages that answer it, each with its moment in the video.">
+<title>Professor in Open Campus</title>
+<script>try{var m=localStorage.getItem("campus-mode");if(m==="dark")document.documentElement.dataset.mode="dark"}catch(e){}</script>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./professor.css">
+</head>
+<body>
+<header class="bar-simple"><a class="brand" href="../lesson/index.html">Open Campus</a><a class="btn btn--quiet" href="../lesson/index.html">Back to lesson</a></header>
+<main class="exam">
+  <h1>Ask the professor</h1>
+  <p class="note">Answers are passages from the lecture itself, never paraphrased, so each one can be checked at its moment in the video.</p>
+
+  <div class="load" id="load">
+    <p>Load the transcript file you made with the ingestion script. It stays in your browser and is not uploaded anywhere.</p>
+    <label for="file">Transcript file (the .json from <code>data/</code>)</label>
+    <input type="file" id="file" accept="application/json">
+  </div>
+
+  <form class="ask" id="ask" role="search">
+    <label class="visually-hidden" for="q">Your question</label>
+    <input type="text" id="q" placeholder="For example: why is there a plus sign in the update?" disabled>
+    <button type="submit" class="btn btn--primary" id="go" disabled>Ask</button>
+  </form>
+  <p class="note" id="status" aria-live="polite"></p>
+  <ol class="passages" id="out"></ol>
+</main>
+<script src="./professor.js"></script>
+</body>
+</html>

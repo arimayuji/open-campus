@@ -18,6 +18,18 @@
   const STATE_LABEL = { mastered: "Mastered", review: "Needs review", unseen: "Not started" };
   const STATE_CLASS = { mastered: "l-m", review: "l-r", unseen: "l-u" };
 
+  /* Mastery from the exam (same browser storage the exam writes) */
+  const FROM_EXAM = { boundary: "boundary", sigmoid: "sigmoid", prob: "probability", mle: "loglik", ascent: "gd" };
+  try {
+    const m = JSON.parse(localStorage.getItem("campus-mastery") || "{}");
+    Object.entries(FROM_EXAM).forEach(([c, term]) => {
+      const r = m["cs229-l3:" + c]; if (!r || !TERMS[term]) return;
+      TERMS[term].state = r.state;
+      const n = $('.g-node[data-term="' + term + '"]');
+      if (n) { n.dataset.state = r.state; n.setAttribute("aria-label", TERMS[term].title + ", " + STATE_LABEL[r.state].toLowerCase()); }
+    });
+  } catch (e) { /* storage can be blocked */ }
+
   /* Theme */
   const modeBtn = $("#mode");
   const applyMode = (m) => {

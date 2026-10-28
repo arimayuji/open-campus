@@ -5,7 +5,6 @@ window.EXAM = {
   title: "Logistic regression: check yourself",
   concepts: {
     boundary: "Why a straight line fails",
-    range: "Outputs as chances",
     sigmoid: "The sigmoid",
     prob: "Chances add up to 1",
     mle: "Maximum likelihood",
