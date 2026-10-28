@@ -62,3 +62,15 @@ html[data-vt="theme"]::view-transition-old(root), html[data-vt="theme"]::view-tr
   ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 200ms; }
 }
 html[data-vt="theme"] .episode { view-transition-name: none; }
+
+/* In plain words: the rule is drawn down from the dot, then the words follow */
+@keyframes draw { from { transform: scaleY(0); } }
+.plain::after { content: ""; position: absolute; left: -2px; top: 0; bottom: 0; width: 2px; background: var(--color-accent); transform-origin: top; opacity: 0.55; }
+.plain.draw::after { animation: draw 800ms var(--ease-out) backwards 120ms; }
+.plain.draw p:not(.plain-label) { animation: rise 700ms var(--ease-out) backwards 320ms; }
+
+/* Opening a lecture: its card grows into the video theatre */
+html[data-vt="open"]::view-transition-group(card) { animation-duration: 560ms; animation-timing-function: var(--ease-in-out); }
+html[data-vt="open"]::view-transition-old(card), html[data-vt="open"]::view-transition-new(card) { height: 100%; object-fit: cover; }
+html[data-vt="open"]::view-transition-old(root), html[data-vt="open"]::view-transition-new(root) { animation-duration: 260ms; }
+html[data-vt="open"] .theatre { animation: none; }

@@ -83,6 +83,23 @@
     say("This lesson does not exist, or it has not been published yet.");
   });
 
+  /* Open a lecture without leaving the page, so the card can grow into the theatre */
+  async function openLesson(lid, tile) {
+    let L;
+    try { L = await api("/api/lessons/" + encodeURIComponent(lid)); } catch (e) { location.href = "?id=" + encodeURIComponent(lid); return; }
+    tile.style.viewTransitionName = "card";
+    const t = morph(() => {
+      tile.style.viewTransitionName = "";
+      history.pushState({ lesson: lid }, "", "?id=" + encodeURIComponent(lid));
+      $("#catalog").hidden = true; $("#rail-home").hidden = true; say("");
+      window.scrollTo(0, 0);
+      lesson(L);
+      $(".theatre").style.viewTransitionName = "card";
+    }, "open");
+    if (t && t.finished) t.finished.finally(() => { const th = $(".theatre"); if (th) th.style.viewTransitionName = ""; });
+  }
+  window.addEventListener("popstate", () => location.reload());
+
   async function catalog() {
     $("#rail-body").hidden = true; $("#rail-home").hidden = false;
     $("#catalog").hidden = false;
@@ -95,6 +112,11 @@
           el("span", {}, el("span", { className: "n", textContent: l.episodes.length + " episodes" }), el("strong", { textContent: l.title }), el("span", { className: "d", textContent: l.creator ? "from " + l.creator : "" })));
         if (i === 0) a.append(archArt());
         spotlight(a);
+        a.addEventListener("click", (ev) => {
+          if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button) return;
+          ev.preventDefault();
+          openLesson(l.id, a);
+        });
         ul.append(el("li", {}, a));
         actions.push({ label: l.title, hint: "open", run: () => { location.href = "?id=" + encodeURIComponent(l.id); } });
       });
@@ -156,6 +178,18 @@
     });
     stagger(bento);
 
+    let shownCount = null;
+    const countTo = (to, n) => {
+      const t = $("#bar-text"), from = shownCount;
+      shownCount = to;
+      if (from === null || from === to || calm) { t.textContent = to + " of " + n + " watched"; return; }
+      const t0 = performance.now(), step = (now) => {
+        const k = Math.min(1, (now - t0) / 420), v = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)));
+        t.textContent = v + " of " + n + " watched";
+        if (k < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
     const paint = () => {
       E.forEach((_, i) => {
         const done = seen.has(i), strength = Math.min(plays[i] || 0, 4);
@@ -170,7 +204,7 @@
         tiles[i].toggleAttribute("aria-current", false);
         if (i === cur) { leaves[i].setAttribute("aria-current", "step"); tiles[i].setAttribute("aria-current", "step"); }
       });
-      $("#bar-text").textContent = seen.size + " of " + N + " watched";
+      countTo(seen.size, N);
       const sb = $("#seen"); sb.setAttribute("aria-pressed", String(seen.has(cur))); sb.textContent = seen.has(cur) ? "Watched" : "Mark as watched";
       $("#next").hidden = cur >= N - 1;
       $("#next").classList.toggle("btn--solid", seen.has(cur)); $("#seen").classList.toggle("btn--solid", !seen.has(cur));
@@ -253,6 +287,7 @@
       $("#e-lead").textContent = e.lead;
       $("#e-plain").textContent = e.plain || "";
       $("#e-plain-wrap").hidden = !e.plain;
+      const pw = $("#e-plain-wrap"); pw.classList.remove("draw"); void pw.offsetWidth; pw.classList.add("draw");
       showPoster(); renderQuiz(); paint();
     };
     function go(i) {
