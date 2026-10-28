@@ -5,6 +5,7 @@ A free, open, English-language study platform that turns openly available AI and
 
 ## Principles
 - Source first: every lesson, answer and question points back to a video timestamp, page or URL.
+- Some owners disable embedding (CS229 Lecture 3 does). Then the lesson shows a link-out button, never a workaround; the ingestion script records `embeddable` so the catalogue can prefer embeddable sources.
 - Links and embeds in public; any downloaded media or transcripts stay local and out of the repo.
 - Removal on request: any source can be dropped from the catalogue.
 - No certificates, no "diploma", no university names or logos in the product. Completion marks only.

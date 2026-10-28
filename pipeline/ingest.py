@@ -99,7 +99,7 @@ def main():
         cues = parse_vtt(vtt) if vtt else (whisper_cues(vid, tmp) if a.whisper else [])
         record = {
             "source": {"video_id": vid, "url": f"https://www.youtube.com/watch?v={vid}", "title": meta.get("title"),
-                       "channel": meta.get("channel"), "license": meta.get("license"), "playlist": a.playlist},
+                       "channel": meta.get("channel"), "license": meta.get("license"), "embeddable": meta.get("playable_in_embed"), "playlist": a.playlist},
             "type": "video", "level": a.level, "topic": a.topic, "date": meta.get("upload_date"),
             "chunks": [dict(c, locator=f"t={c['start']}") for c in chunk(cues)],
             "has_transcript": bool(cues),

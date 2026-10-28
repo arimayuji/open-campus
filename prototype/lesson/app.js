@@ -128,7 +128,7 @@
 
   /* Video slot: embed only when an ID is set */
   const slot = $("#video-slot");
-  if (slot.dataset.video) {
+  if (slot.dataset.video && slot.dataset.embeddable !== "false") {
     const f = document.createElement("iframe");
     f.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(slot.dataset.video);
     f.title = "Lecture video"; f.allow = "accelerometer; encrypted-media; picture-in-picture"; f.allowFullscreen = true; f.loading = "lazy";
