@@ -70,37 +70,44 @@
       <aside class="callout" aria-labelledby="h-plain">
         <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 9v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="6.3" r="1" fill="currentColor"/></svg>
         <div>
-          <h3 id="h-plain">In plain words</h3>
-          <p>Think about whether to take an umbrella. You look at clues (clouds, humidity, the forecast), give each one some weight, and end up with a feeling somewhere between "surely not" and "surely yes". Logistic regression does the same with numbers: it adds up the clues and turns the total into a chance between 0% and 100%.</p>
+          <h2 id="h-plain">In plain words</h2>
+          <p>Think about whether to take an umbrella. You look at clues (clouds, humidity, the forecast), give each one some weight, and end up with a feeling somewhere between “surely not” and “surely yes”. Logistic regression does the same with numbers: it adds up the clues and turns the total into a chance between 0% and 100%.</p>
         </div>
       </aside>
 
       <figure class="video">
-        <div data-slot="video" id="video-slot" data-video="">
+        <div data-slot="video" id="video-slot" data-video="het9HFqo1TQ">
           <div class="slot-note">
             <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="3" y="7" width="34" height="26" rx="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 14.5v11l9-5.5z" fill="currentColor"/></svg>
             <p>The lecture video plays here.</p>
           </div>
         </div>
-        <figcaption>Lecture video. The player loads from the YouTube ID set on this slot, and the original credit sits beside it.</figcaption>
+        <figcaption>Locally Weighted &amp; Logistic Regression, Stanford CS229 Lecture 3 (Autumn 2018), from Stanford Online on YouTube. Played from YouTube, not hosted here.</figcaption>
       </figure>
 
       <section aria-labelledby="h-steps">
         <h2 id="h-steps">Step by step</h2>
         <div class="steps">
           <details class="step" open>
-            <summary><span class="n">1</span>Start with a linear score</summary>
+            <summary><span class="n">1</span>Why not just a straight line?</summary>
             <div class="step-body">
-              <p>Combine the inputs with weights and a bias, exactly as in <button type="button" class="term" data-term="linear" aria-expanded="false">linear regression</button>. The result can be any real number.</p>
-              <pre class="formula">z = w·x + b</pre>
+              <p>With <button type="button" class="term" data-term="linear" aria-expanded="false">linear regression</button> you could fit a line to yes-or-no data and round at 0.5. It works until one extra far-away example drags the line and moves the whole <button type="button" class="term" data-term="boundary" aria-expanded="false">decision boundary</button>. It can also output values below 0 or above 1, which make no sense as a chance.</p>
+              <div class="callout">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 9v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="6.3" r="1" fill="currentColor"/></svg>
+                <div>
+                  <h3>In the lecture</h3>
+                  <p>The instructor adds one obvious example to the data and shows the fitted line, and the threshold with it, shifting even though the pattern is still clear.</p>
+                </div>
+              </div>
             </div>
           </details>
 
           <details class="step" open>
             <summary><span class="n">2</span>Squash the score into a probability</summary>
             <div class="step-body">
-              <p>The <button type="button" class="term" data-term="sigmoid" aria-expanded="false">sigmoid</button> turns any score into a number between 0 and 1, which we read as the probability of the positive class.</p>
-              <pre class="formula">p = σ(z) = 1 / (1 + e^−z)</pre>
+              <p>Keep the linear score, then pass it through the <button type="button" class="term" data-term="sigmoid" aria-expanded="false">sigmoid</button> (also called the logistic function). Whatever the score, the output lands between 0 and 1.</p>
+              <pre class="formula">z = θ·x
+p = g(z) = 1 / (1 + e^−z)</pre>
               <div class="widget">
                 <svg viewBox="0 0 320 140" role="img" aria-label="Sigmoid curve with a marker at the chosen score">
                   <line class="w-axis" x1="16" y1="124" x2="304" y2="124"/>
@@ -115,32 +122,27 @@
           </details>
 
           <details class="step" open>
-            <summary><span class="n">3</span>Pick a threshold</summary>
+            <summary><span class="n">3</span>Read the output as a chance</summary>
             <div class="step-body">
-              <p>Predict the positive class when p is at least 0.5, which happens exactly when z is at least 0. The <button type="button" class="term" data-term="boundary" aria-expanded="false">decision boundary</button> is therefore a straight line in the input space.</p>
+              <p>The output is the probability that the label is 1. The two chances add up to 1: if a tumor has a 10% chance of being malignant, it has a 90% chance of being benign. That is how <button type="button" class="term" data-term="logreg" aria-expanded="false">logistic regression</button> turns a score into a decision.</p>
+              <pre class="formula">P(y = 1 | x) = p
+P(y = 0 | x) = 1 − p</pre>
             </div>
           </details>
 
           <details class="step" open>
-            <summary><span class="n">4</span>Measure the error with log loss</summary>
+            <summary><span class="n">4</span>Pick the weights that make the data most likely</summary>
             <div class="step-body">
-              <p><button type="button" class="term" data-term="logloss" aria-expanded="false">Log loss</button> is small when the model is confident and right, and grows fast when it is confident and wrong.</p>
-              <pre class="formula">L = −[ y·log(p) + (1 − y)·log(1 − p) ]</pre>
-              <div class="callout">
-                <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 9v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="6.3" r="1" fill="currentColor"/></svg>
-                <div>
-                  <h3>Why not mean squared error?</h3>
-                  <p>Squared error on top of a sigmoid gives a loss surface with flat regions that slow learning. Log loss is convex for logistic regression, so there is one minimum to find.</p>
-                </div>
-              </div>
+              <p>Choose θ so the training labels are as probable as possible. For convenience we take the log, which gives the <button type="button" class="term" data-term="loglik" aria-expanded="false">log-likelihood</button>.</p>
+              <pre class="formula">ℓ(θ) = Σ [ y·log(p) + (1 − y)·log(1 − p) ]</pre>
             </div>
           </details>
 
           <details class="step" open>
-            <summary><span class="n">5</span>Fit the weights</summary>
+            <summary><span class="n">5</span>Climb to the best weights</summary>
             <div class="step-body">
-              <p><button type="button" class="term" data-term="gd" aria-expanded="false">Gradient descent</button> nudges each weight against the gradient of the loss. For log loss the gradient has a clean form.</p>
-              <pre class="formula">w ← w − η · (p − y) · x</pre>
+              <p>Now we want the highest point, not the lowest, so we use <button type="button" class="term" data-term="gd" aria-expanded="false">gradient ascent</button>: the same idea as gradient descent with a plus sign instead of a minus. For logistic regression the log-likelihood has a single peak, so there are no local optima to get stuck on.</p>
+              <pre class="formula">θ ← θ + α · (y − p) · x</pre>
             </div>
           </details>
         </div>
@@ -173,9 +175,9 @@
           <g class="g-node" data-term="probability" data-state="mastered" tabindex="0" role="button" aria-label="Probability basics, mastered"><circle class="g-ring" cx="90" cy="250" r="15"/><circle class="g-dot" cx="90" cy="250" r="9"/><text class="g-label" x="90" y="282">Probability basics</text></g>
           <g class="g-node" data-term="sigmoid" data-state="review" tabindex="0" role="button" aria-label="Sigmoid function, needs review"><circle class="g-ring" cx="250" cy="170" r="15"/><circle class="g-dot" cx="250" cy="170" r="9"/><text class="g-label" x="250" y="202">Sigmoid</text></g>
           <g class="g-node" data-term="logreg" data-state="review" tabindex="0" role="button" aria-label="Logistic regression, needs review"><circle class="g-ring" cx="410" cy="170" r="15"/><circle class="g-dot" cx="410" cy="170" r="9"/><text class="g-label" x="410" y="202">Logistic regression</text></g>
-          <g class="g-node" data-term="logloss" data-state="unseen" tabindex="0" role="button" aria-label="Log loss, not started"><circle class="g-ring" cx="570" cy="90" r="15"/><circle class="g-dot" cx="570" cy="90" r="9"/><text class="g-label" x="570" y="66">Log loss</text></g>
+          <g class="g-node" data-term="loglik" data-state="unseen" tabindex="0" role="button" aria-label="Log-likelihood, not started"><circle class="g-ring" cx="570" cy="90" r="15"/><circle class="g-dot" cx="570" cy="90" r="9"/><text class="g-label" x="570" y="66">Log-likelihood</text></g>
           <g class="g-node" data-term="boundary" data-state="unseen" tabindex="0" role="button" aria-label="Decision boundary, not started"><circle class="g-ring" cx="570" cy="250" r="15"/><circle class="g-dot" cx="570" cy="250" r="9"/><text class="g-label" x="570" y="282">Decision boundary</text></g>
-          <g class="g-node" data-term="gd" data-state="unseen" tabindex="0" role="button" aria-label="Gradient descent, not started"><circle class="g-ring" cx="730" cy="90" r="15"/><circle class="g-dot" cx="730" cy="90" r="9"/><text class="g-label" x="730" y="66">Gradient descent</text></g>
+          <g class="g-node" data-term="gd" data-state="unseen" tabindex="0" role="button" aria-label="Gradient ascent, not started"><circle class="g-ring" cx="730" cy="90" r="15"/><circle class="g-dot" cx="730" cy="90" r="9"/><text class="g-label" x="730" y="66">Gradient ascent</text></g>
           <g class="g-node" data-term="reg" data-state="unseen" tabindex="0" role="button" aria-label="Regularization, not started"><circle class="g-ring" cx="730" cy="250" r="15"/><circle class="g-dot" cx="730" cy="250" r="9"/><text class="g-label" x="730" y="282">Regularization</text></g>
         </svg>
       </div>

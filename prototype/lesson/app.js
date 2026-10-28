@@ -4,15 +4,16 @@
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
 
   /* Concept records. Timestamps stay empty until a transcript is indexed. */
+  const VIDEO = "het9HFqo1TQ";
   const TERMS = {
-    linear: { title: "Linear regression", state: "mastered", def: "Predicts a number as a weighted sum of the inputs plus a bias: z = w·x + b.", ts: null, rel: ["sigmoid", "logreg"] },
+    linear: { title: "Linear regression", state: "mastered", def: "Predicts a number as a weighted sum of the inputs. Used on yes-or-no data, one extra example can move the fitted line and the threshold with it.", ts: 3, rel: ["sigmoid", "logreg", "boundary"] },
     probability: { title: "Probability basics", state: "mastered", def: "A number between 0 and 1 that says how likely an outcome is. Probabilities of all outcomes add up to 1.", ts: null, rel: ["sigmoid"] },
-    sigmoid: { title: "Sigmoid function", state: "review", def: "A smooth S-shaped function, σ(z) = 1 / (1 + e^−z), that maps any real number to a value between 0 and 1.", ts: null, rel: ["probability", "logreg", "boundary"] },
-    logreg: { title: "Logistic regression", state: "review", def: "A classifier that passes a linear score through the sigmoid and reads the result as the probability of the positive class.", ts: null, rel: ["linear", "sigmoid", "logloss", "boundary"] },
-    logloss: { title: "Log loss", state: "unseen", def: "Also called binary cross-entropy. It punishes a confident wrong prediction far more than an unsure one: L = −[y·log p + (1−y)·log(1−p)].", ts: null, rel: ["logreg", "gd", "reg"] },
-    boundary: { title: "Decision boundary", state: "unseen", def: "The set of inputs where the model is exactly undecided, p = 0.5. For logistic regression that is where w·x + b = 0, a straight line or plane.", ts: null, rel: ["logreg", "sigmoid"] },
-    gd: { title: "Gradient descent", state: "unseen", def: "An iterative method that moves the weights a small step against the gradient of the loss, repeating until the loss stops falling.", ts: null, rel: ["logloss"] },
-    reg: { title: "Regularization", state: "unseen", def: "A penalty on large weights added to the loss, which reduces overfitting.", ts: null, rel: ["logloss"] }
+    sigmoid: { title: "Sigmoid function", state: "review", def: "Also called the logistic function: g(z) = 1 / (1 + e^−z). It crosses 0.5 at z = 0 and keeps every output between 0 and 1.", ts: 2846, rel: ["probability", "logreg", "boundary"] },
+    logreg: { title: "Logistic regression", state: "review", def: "A classifier for yes-or-no labels. It passes a linear score through the logistic function and reads the result as the probability that the label is 1.", ts: 2740, rel: ["linear", "sigmoid", "loglik", "boundary"] },
+    loglik: { title: "Log-likelihood", state: "unseen", def: "The log of how probable the training labels are under the model. Logistic regression picks the weights that maximize it.", ts: 3372, rel: ["logreg", "gd", "reg"] },
+    boundary: { title: "Decision boundary", state: "unseen", def: "The point where the prediction flips from 0 to 1. With a threshold of 0.5, everything on one side is predicted 0 and everything on the other is predicted 1.", ts: 2687, rel: ["logreg", "sigmoid"] },
+    gd: { title: "Gradient ascent", state: "unseen", def: "Like gradient descent but climbing: it steps the weights up the log-likelihood, which is why the update has a plus sign. The log-likelihood of logistic regression has a single peak.", ts: 3586, rel: ["loglik"] },
+    reg: { title: "Regularization", state: "unseen", def: "A penalty on large weights added to the objective, which reduces overfitting. Not covered in this lecture.", ts: null, rel: ["loglik"] }
   };
   const STATE_LABEL = { mastered: "Mastered", review: "Needs review", unseen: "Not started" };
   const STATE_CLASS = { mastered: "l-m", review: "l-r", unseen: "l-u" };
@@ -59,7 +60,14 @@
     $("#r-def").textContent = t.def;
     $("#r-status-text").textContent = STATE_LABEL[t.state];
     $("#r-status-dot").setAttribute("class", STATE_CLASS[t.state]);
-    $("#r-source").textContent = t.ts ? "Lecture video at " + t.ts + "." : "Lecture video. The timestamp appears once the transcript is indexed.";
+    const src = $("#r-source"); src.textContent = "";
+    if (t.ts) {
+      const mm = Math.floor(t.ts / 60), ss = String(t.ts % 60).padStart(2, "0");
+      const a = document.createElement("a");
+      a.href = "https://www.youtube.com/watch?v=" + VIDEO + "&t=" + t.ts + "s"; a.target = "_blank"; a.rel = "noopener";
+      a.textContent = "Lecture video at " + mm + ":" + ss;
+      src.append(a, " (opens YouTube)");
+    } else src.textContent = "Not covered in this lecture's transcript yet.";
     const rel = $("#r-rel"); rel.textContent = "";
     t.rel.forEach((r) => {
       const li = document.createElement("li");
