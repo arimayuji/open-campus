@@ -253,3 +253,10 @@ input[type="range"] { width: 100%; min-height: 44px; margin: 0; accent-color: va
 @media (min-width: 48.01rem) { .outline > .outline-inner { display: block; } }
 .brand, .seg button { white-space: nowrap; }
 @media (max-width: 30rem) { .mode-label { display: none; } .seg button { padding: 0 var(--space-sm); } }
+
+.episode .lead { margin-top: var(--space-md); color: var(--color-ink-2); }
+.episode h1 { font-size: var(--text-3xl); max-width: 22ch; }
+.episode .callout { margin-top: var(--space-lg); }
+.ep-body { display: grid; gap: var(--space-md); margin-top: var(--space-lg); }
+.lesson .video { margin-bottom: var(--space-lg); }
+.lesson-foot { margin-top: var(--space-xl); }

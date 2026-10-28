@@ -13,6 +13,7 @@
     loglik: { title: "Negative log likelihood loss", state: "unseen", def: "Take the probability the model gave to what really happened, take its log (the best weights stay the same because log keeps the order), then the negative so that a lower loss is better.", ts: 2229, rel: ["logreg", "gd", "reg"] },
     boundary: { title: "Boundary", state: "unseen", def: "Where θᵀx + θ₀ = 0 the model gives exactly 1/2. That line separates the two predictions: one label on the positive side, the other on the line and below.", ts: 967, rel: ["logreg", "sigmoid"] },
     gd: { title: "Gradient descent", state: "unseen", def: "A general way to minimize a function by repeatedly stepping against its gradient. You can stop when the loss barely changes or the gradient is very small. The logistic loss is convex, which gives guarantees.", ts: 2663, rel: ["loglik", "reg"] },
+    convex: { title: "Convexity", state: "unseen", def: "A function is convex if the straight segment between any two points on its graph never dips below the graph. For a convex loss, gradient descent run long enough reaches the global best.", ts: 3191, rel: ["loglik", "gd"] },
     reg: { title: "Regularization", state: "unseen", def: "A penalty that discourages huge weights. Huge weights push every probability to an extreme, claiming more confidence than the data can justify.", ts: 4044, rel: ["loglik", "gd"] }
   };
   const STATE_LABEL = { mastered: "Mastered", review: "Needs review", unseen: "Not started" };
@@ -75,11 +76,11 @@
     const src = $("#r-source"); src.textContent = "";
     if (t.ts) {
       const mm = Math.floor(t.ts / 60), ss = String(t.ts % 60).padStart(2, "0");
-      const a = document.createElement("a");
-      a.href = "https://www.youtube.com/watch?v=" + VIDEO + "&t=" + t.ts + "s"; a.target = "_blank"; a.rel = "noopener";
-      a.textContent = "Lecture video at " + mm + ":" + ss;
-      src.append(a, " (opens YouTube)");
-    } else src.textContent = "Not covered in this lecture's transcript yet.";
+      const btn = document.createElement("button");
+      btn.type = "button"; btn.className = "btn"; btn.textContent = "Play from " + mm + ":" + ss;
+      btn.addEventListener("click", () => playAt(t.ts));
+      src.append(btn);
+    } else src.textContent = "Not covered in this lecture yet.";
     const rel = $("#r-rel"); rel.textContent = "";
     t.rel.forEach((r) => {
       const li = document.createElement("li");
@@ -110,30 +111,50 @@
   };
   z.addEventListener("input", drawZ); drawZ();
 
-  /* Progress */
-  const done = $("#complete");
-  const bar = $("#bar-progress"), barText = $("#bar-text"), cur = $(".item[aria-current]");
-  const total = $$(".item").length;
-  const count = () => $$('.item[data-state="done"]').length;
-  const paint = () => { bar.value = count(); barText.textContent = count() + " of " + total + " complete"; };
-  done.addEventListener("click", () => {
-    const on = done.getAttribute("aria-pressed") !== "true";
-    done.setAttribute("aria-pressed", String(on));
-    $(".c-label", done).textContent = on ? "Completed" : "Mark lesson complete";
-    cur.dataset.state = on ? "done" : "current";
-    $(".mark", cur).innerHTML = on ? $("#i-done").innerHTML : $("#i-current").innerHTML;
-    paint();
-  });
-  paint();
-
-  /* Video slot: embed only when an ID is set */
-  const slot = $("#video-slot");
-  if (slot.dataset.video && slot.dataset.embeddable !== "false") {
-    const f = document.createElement("iframe");
-    f.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(slot.dataset.video);
-    f.title = "Lecture video"; f.allow = "accelerometer; encrypted-media; picture-in-picture"; f.allowFullscreen = true; f.loading = "lazy";
-    slot.appendChild(f);
-  }
+  /* Episodes: one lecture cut into short clips */
+  const eps = $$(".episode"), items = $$(".item[data-ep]");
+  const slot = $("#video-slot"), VID = slot.dataset.video, KEYD = "campus-episodes";
+  let cur = 0, frame = null, done = {};
+  try { done = JSON.parse(localStorage.getItem(KEYD) || "{}"); } catch (e) { done = {}; }
+  const save = () => { try { localStorage.setItem(KEYD, JSON.stringify(done)); } catch (e) { /* storage can be blocked */ } };
+  const clipSrc = (s, e, auto) => "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(VID) + "?start=" + s + (e ? "&end=" + e : "") + "&rel=0&modestbranding=1" + (auto ? "&autoplay=1" : "");
+  const setClip = (s, e, auto) => {
+    if (!frame) {
+      frame = document.createElement("iframe");
+      frame.title = "Lecture clip"; frame.allow = "accelerometer; encrypted-media; picture-in-picture"; frame.allowFullscreen = true;
+      slot.appendChild(frame);
+    }
+    frame.src = clipSrc(s, e, auto);
+    const link = $("#yt-link"); if (link) link.href = "https://www.youtube.com/watch?v=" + VID + "&t=" + s + "s";
+  };
+  const playAt = (ts) => setClip(ts, 0, true);
+  const mark = (state) => state === "done" ? $("#i-done").innerHTML : state === "current" ? $("#i-current").innerHTML : '<circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+  const paint = () => {
+    items.forEach((it, i) => {
+      const st = i === cur ? "current" : done[VID + ":" + (i + 1)] ? "done" : "todo";
+      it.dataset.state = done[VID + ":" + (i + 1)] ? "done" : "todo";
+      if (i === cur) it.setAttribute("aria-current", "page"); else it.removeAttribute("aria-current");
+      $(".mark", it).innerHTML = mark(done[VID + ":" + (i + 1)] ? "done" : i === cur ? "current" : "todo");
+    });
+    const n = Object.keys(done).filter((k) => k.startsWith(VID + ":")).length;
+    $("#bar-progress").value = n; $("#bar-text").textContent = n + " of " + eps.length + " watched";
+    $("#prev").disabled = cur === 0;
+    $("#complete").textContent = cur === eps.length - 1 ? "Done" : "Done, next episode";
+  };
+  const showEp = (i, fromHash) => {
+    cur = Math.max(0, Math.min(eps.length - 1, i));
+    eps.forEach((e, k) => { e.hidden = k !== cur; });
+    const e = eps[cur];
+    setClip(+e.dataset.start, +e.dataset.end, false);
+    paint(); clearPanel();
+    if (!fromHash) history.replaceState(null, "", "#ep-" + (cur + 1));
+    show("lesson"); window.scrollTo(0, 0);
+  };
+  items.forEach((it, i) => it.addEventListener("click", (ev) => { ev.preventDefault(); showEp(i); if (matchMedia("(max-width: 48rem)").matches) $(".outline").removeAttribute("open"); }));
+  $("#prev").addEventListener("click", () => showEp(cur - 1));
+  $("#complete").addEventListener("click", () => { done[VID + ":" + (cur + 1)] = true; save(); if (cur < eps.length - 1) showEp(cur + 1); else paint(); });
+  const m0 = /^#ep-(\d+)$/.exec(location.hash);
+  showEp(m0 ? +m0[1] - 1 : 0, true);
 
   /* Small screens start with the outline closed */
   if (matchMedia("(max-width: 48rem)").matches) $(".outline").removeAttribute("open");

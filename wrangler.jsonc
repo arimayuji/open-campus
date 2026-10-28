@@ -1,5 +1,9 @@
 {
   "name": "open-campus",
   "compatibility_date": "2026-10-01",
-  "assets": { "directory": "./prototype" }
+  "assets": { "directory": "./prototype" },
+  "routes": [
+    { "pattern": "opencampus.dev", "custom_domain": true },
+    { "pattern": "www.opencampus.dev", "custom_domain": true }
+  ]
 }
