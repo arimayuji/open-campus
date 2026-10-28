@@ -4,55 +4,86 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lesson in Open Campus</title>
-<meta name="description" content="A lesson cut into short episodes, each playing only its own part of the lecture.">
+<meta name="description" content="A lecture cut into short episodes. Each one plays only its own part, and the line that connects them thickens every time you come back.">
 <script>try{var m=localStorage.getItem("campus-mode");if(m==="dark")document.documentElement.dataset.mode="dark"}catch(e){}</script>
 <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
-<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../lesson/app.css">
+<link href="https://api.fontshare.com/v2/css?f[]=clash-grotesk@500,600&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./learn.css">
 </head>
 <body>
-<a class="skip" href="#main">Skip to lesson</a>
-<div class="app app--learn">
-  <header class="bar">
-    <a class="brand" href="./">Open Campus</a>
-    <div class="bar-tools">
-      <button type="button" class="btn btn--quiet" id="mode" aria-pressed="false" aria-label="Dark mode">
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.2 9.6A5.5 5.5 0 0 1 6.4 2.8a5.5 5.5 0 1 0 6.8 6.8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-        <span class="mode-label">Light</span>
-      </button>
+<a class="skip" href="#stage">Skip to the episode</a>
+
+<template id="logo"><svg viewBox="0 0 96 96" aria-hidden="true"><path d="M18 84V46C18 24 34 12 50 12C68 12 80 26 80 44" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/><path d="M50 84C50 66 44 58 36 52C30 47 30 40 36 36C42 32 52 36 52 44C52 52 62 54 70 62" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="80" cy="60" r="7" class="node" stroke="currentColor" stroke-width="3"/><circle cx="70" cy="62" r="3" fill="currentColor"/><circle cx="50" cy="84" r="4" fill="currentColor"/></svg></template>
+
+<div class="shell" id="shell">
+  <aside class="rail" id="rail" aria-label="Episodes">
+    <a class="brand" href="./"><span class="brand-mark" id="brand-mark"></span><span>Open Campus</span></a>
+    <div class="rail-home" id="rail-home" hidden>
+      <p>Open lectures, cut to fit a day, explained in plain words.</p>
+      <a href="https://github.com/arimayuji/open-campus/issues/new" target="_blank" rel="noopener">Suggest a lecture</a>
+      <a href="https://github.com/arimayuji/open-campus" target="_blank" rel="noopener">Source code</a>
     </div>
-  </header>
+    <div class="rail-body" id="rail-body" hidden>
+      <h2 class="rail-title" id="o-title"></h2>
+      <p class="rail-count" id="bar-text"></p>
+      <ol class="branch" id="branch"></ol>
+    </div>
+  </aside>
 
-  <details class="outline" open>
-    <summary>Episodes</summary>
-    <nav class="outline-inner" aria-label="Episodes">
-      <p class="outline-title" id="o-title">Loading</p>
-      <div class="progress">
-        <p id="bar-text">0 watched</p>
-        <progress id="bar-progress" value="0" max="1" aria-labelledby="bar-text"></progress>
-      </div>
-      <div class="module"><ol id="o-list"></ol></div>
-    </nav>
-  </details>
+  <div class="surface">
+    <header class="top">
+      <button type="button" class="chip" id="open-palette" aria-keyshortcuts="Control+K Meta+K">Jump to <kbd id="kbd">Ctrl K</kbd></button>
+      <button type="button" class="chip" id="mode" aria-pressed="false" aria-label="Dark mode"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.2 9.6A5.5 5.5 0 0 1 6.4 2.8a5.5 5.5 0 1 0 6.8 6.8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span class="mode-label">Light</span></button>
+    </header>
 
-  <main class="main" id="main">
-    <p class="notice" id="notice" hidden></p>
-    <div class="lesson" id="lesson" hidden>
-      <figure class="video">
-        <div data-slot="video" id="video-slot">
-          <div class="slot-note"><p>Pick an episode to play its part of the lecture.</p></div>
+    <main id="stage" class="stage">
+      <p class="notice" id="notice" hidden></p>
+
+      <section class="lesson" id="lesson" hidden>
+        <div class="theatre">
+          <div class="arch" id="arch" data-slot="video">
+            <div class="poster" id="poster">
+              <button type="button" class="play" id="play" aria-label="Play this episode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></button>
+              <p class="poster-hint" id="poster-hint"></p>
+            </div>
+          </div>
+          <p class="credit" id="credit"></p>
         </div>
-        <figcaption id="credit"></figcaption>
-      </figure>
-      <div id="episodes"></div>
-    </div>
-    <div class="catalog" id="catalog" hidden>
-      <h1>Lessons</h1>
-      <ul class="cards" id="cards"></ul>
-    </div>
-  </main>
+
+        <article class="episode" id="episode" aria-live="polite">
+          <p class="when" id="e-when"></p>
+          <h1 id="e-title"></h1>
+          <p class="lead" id="e-lead"></p>
+          <blockquote class="plain" id="e-plain-wrap"><p class="plain-label">In plain words</p><p id="e-plain"></p></blockquote>
+          <div class="ep-actions">
+            <button type="button" class="btn btn--solid" id="seen">Mark as watched</button>
+            <button type="button" class="btn" id="next">Next episode</button>
+          </div>
+        </article>
+
+        <section class="all" aria-labelledby="all-h">
+          <h2 id="all-h">The whole lecture, in pieces</h2>
+          <ol class="bento" id="bento"></ol>
+        </section>
+      </section>
+
+      <section class="catalog" id="catalog" hidden>
+        <h1>Lectures cut to fit a day</h1>
+        <p class="lead">Free courses, split into short episodes. Pick one and the branch starts growing.</p>
+        <ul class="bento bento--catalog" id="cards"></ul>
+      </section>
+    </main>
+  </div>
 </div>
+
+<dialog class="palette" id="palette" aria-label="Jump to">
+  <form method="dialog" class="palette-box">
+    <input type="search" id="q" placeholder="Jump to an episode or an action" autocomplete="off" aria-controls="results" aria-label="Search">
+    <ul id="results" role="listbox"></ul>
+  </form>
+</dialog>
+
 <script src="./learn.js"></script>
 </body>
 </html>

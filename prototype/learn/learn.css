@@ -1,13 +1,132 @@
-/* Hallmark · shape: app screen · genre: modern-minimal · theme: Coral (reuses ../lesson/app.css tokens; adds only the generated-lesson layout) */
-/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V4 · weakest: V, the catalogue is plain on purpose until there are enough lessons to design for */
-.app--learn { grid-template-columns: var(--outline-w) minmax(0, 1fr); }
-.app--learn .main { max-width: 60rem; }
-.notice { margin: 0 0 var(--space-lg); padding: var(--space-sm) var(--space-md); border: 1px solid var(--color-rule-2); border-radius: var(--radius-card); background: var(--color-paper-2); font-size: var(--text-sm); color: var(--color-ink-2); }
-.episode { margin-top: var(--space-2xl); scroll-margin-top: calc(var(--bar-h) + var(--space-md)); }
-.episode .when { margin-top: var(--space-xs); font-size: var(--text-sm); color: var(--color-muted); font-variant-numeric: tabular-nums; }
-.ep-actions { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-top: var(--space-md); }
-.item .when { margin-left: auto; padding-left: var(--space-xs); font-size: var(--text-sm); color: var(--color-muted); font-variant-numeric: tabular-nums; }
-.cards { display: grid; gap: var(--space-sm); margin: var(--space-lg) 0 0; padding: 0; list-style: none; }
-.cards a { display: grid; gap: var(--space-3xs); padding: var(--space-md); border: 1px solid var(--color-rule); border-radius: var(--radius-card); color: var(--color-ink); text-decoration: none; }
-.cards a:hover { border-color: var(--color-rule-2); background: var(--color-paper-2); }
-.cards span { font-size: var(--text-sm); color: var(--color-muted); }
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: custom · job: try · idea: "A lesson is a branch you grow: each episode you finish draws the line to the next, and coming back makes it thicker." · vibe: "living tissue, night greenhouse, precise"
+ * paper: oklch(96.8% 0.010 150) · accent: oklch(72% 0.15 35) · display: Clash Grotesk · body: Satoshi · hero: an arch-topped video theatre on a deep conifer rail with the lesson drawn as a branch · nav: left rail that is the branch itself · footer: none (app) · imagery: the product · signature: the branch in the rail that grows and thickens as you watch
+ * axes: light/grotesk-sans/warm · posture: restrained · contrast: pass · fold: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V4 · weakest: S, the catalogue is one card until more lessons exist, so it leans on the arch artwork */
+@import url("./tokens.css");
+@import url("./base.css");
+
+.skip { position: absolute; left: var(--space-md); top: -100px; z-index: var(--z-toast); padding: var(--space-xs) var(--space-md); background: var(--color-ink); color: var(--color-paper); border-radius: var(--radius-pill); }
+.skip:focus { top: var(--space-md); }
+
+.shell { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); min-height: 100dvh; max-width: var(--container); margin-inline: auto; }
+.surface { min-width: 0; }
+.top { display: flex; justify-content: flex-end; gap: var(--space-xs); padding: var(--space-sm) var(--gutter); }
+.chip { display: inline-flex; align-items: center; gap: var(--space-xs); height: 2.25rem; padding-inline: var(--space-md); border: 1px solid var(--color-rule); border-radius: var(--radius-pill); background: var(--color-paper); color: var(--color-ink-2); font-size: var(--text-sm); cursor: pointer; transition: border-color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out); }
+.chip svg { width: 1rem; height: 1rem; }
+.chip:hover { border-color: var(--color-muted); background: var(--color-paper-2); }
+.chip:active { transform: scale(0.97); }
+.chip:disabled, .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+kbd { font-family: var(--font-outlier); font-size: var(--text-xs); padding: var(--space-3xs) var(--space-xs); border-radius: var(--space-xs); background: var(--color-paper-3); color: var(--color-muted); }
+
+/* The rail: deep conifer, the lesson drawn as a branch */
+.rail { position: sticky; top: 0; align-self: start; height: 100dvh; overflow-y: auto; padding: var(--space-lg); background: var(--color-deep); color: var(--color-deep-ink); display: flex; flex-direction: column; gap: var(--space-lg); scrollbar-width: thin; scrollbar-color: var(--color-deep-rule) transparent; }
+.brand { display: inline-flex; align-items: center; gap: var(--space-sm); width: fit-content; font-family: var(--font-display); font-weight: 600; font-size: var(--text-lg); letter-spacing: var(--tracking-display); text-decoration: none; color: var(--color-deep-ink); }
+.brand-mark svg { width: 2rem; height: 2rem; }
+.node { fill: var(--color-accent); }
+.rail-title { font-size: var(--text-title); line-height: 1.2; font-weight: 600; letter-spacing: var(--tracking-display); }
+.rail-count { margin-top: var(--space-xs); font-size: var(--text-sm); color: var(--color-deep-muted); font-variant-numeric: tabular-nums; }
+.branch { list-style: none; margin: 0; padding: 0; }
+.leaf { position: relative; }
+.leaf button { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr) 3rem; align-items: center; width: 100%; min-height: 4rem; padding: 0; border: 0; background: none; color: var(--color-deep-muted); text-align: left; cursor: pointer; border-radius: var(--radius-card); transition: color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out); }
+.leaf button:hover { color: var(--color-deep-ink); background: color-mix(in oklab, var(--color-deep-2) 70%, transparent); }
+.leaf button:focus-visible { outline-color: var(--color-accent); }
+.leaf[aria-current="step"] button { color: var(--color-deep-ink); }
+.leaf .t { font-size: var(--text-sm); line-height: 1.3; padding-block: var(--space-xs); }
+.leaf .m { font-family: var(--font-outlier); font-size: var(--text-xs); padding-right: var(--space-xs); text-align: right; }
+.vine { width: 2.25rem; height: 4rem; overflow: visible; }
+.vine .base { fill: none; stroke: var(--color-deep-rule); stroke-linecap: round; }
+.vine .grown { fill: none; stroke: var(--color-accent); stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset var(--dur-long) var(--ease-out), stroke-width var(--dur-short) var(--ease-out); }
+.vine .grown.on { stroke-dashoffset: 0; }
+.vine .bud { fill: var(--color-deep); stroke: var(--color-deep-muted); stroke-width: 2; transition: fill var(--dur-short) var(--ease-out), stroke var(--dur-short) var(--ease-out); }
+.leaf[data-state="done"] .bud { fill: var(--color-accent); stroke: var(--color-accent); }
+.leaf[aria-current="step"] .bud { stroke: var(--color-deep-ink); stroke-width: 3; }
+.vine .halo { fill: none; stroke: var(--color-accent); stroke-width: 1.5; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.leaf[aria-current="step"] .halo { animation: halo 2.4s var(--ease-out) infinite; }
+@keyframes halo { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(2.4); } }
+
+/* The stage */
+.stage { padding: var(--space-md) var(--gutter) var(--space-3xl); max-width: 64rem; }
+.notice { margin-bottom: var(--space-lg); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-card); background: var(--color-paper-2); font-size: var(--text-sm); color: var(--color-ink-2); }
+.theatre { padding: var(--space-lg) var(--space-lg) var(--space-md); border-radius: 50% 50% var(--radius-card) var(--radius-card) / 29% 29% var(--radius-card) var(--radius-card); background: var(--color-stage); color: var(--color-deep-ink); }
+.arch { position: relative; aspect-ratio: 16 / 9; border-radius: 50% 50% var(--space-sm) var(--space-sm) / 34% 34% var(--space-sm) var(--space-sm); background: var(--color-stage-2); background-size: cover; background-position: center; overflow: hidden; }
+.arch video, .arch iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--color-deep); }
+.poster { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: var(--space-sm); background: linear-gradient(to top, color-mix(in oklab, var(--color-deep) 82%, transparent), color-mix(in oklab, var(--color-deep) 30%, transparent)); }
+.play { display: grid; place-items: center; width: 4.5rem; height: 4.5rem; border: 0; border-radius: var(--radius-pill); background: var(--color-accent); color: var(--color-deep); cursor: pointer; transition: transform var(--dur-short) var(--ease-out); }
+.play:hover { transform: scale(1.06); }
+.play:active { transform: scale(0.97); }
+.play svg { width: 1.75rem; height: 1.75rem; margin-left: var(--space-3xs); }
+.poster-hint { font-size: var(--text-sm); color: var(--color-deep-ink); text-shadow: 0 1px 12px var(--color-deep); }
+.poster .btn { margin-top: var(--space-xs); }
+.credit { margin-top: var(--space-md); font-size: var(--text-xs); color: var(--color-deep-muted); }
+.credit a { color: var(--color-deep-ink); }
+
+.episode { margin-top: var(--space-xl); view-transition-name: episode; }
+.when { font-family: var(--font-outlier); font-size: var(--text-sm); color: var(--color-muted); }
+.episode h1 { margin-top: var(--space-xs); font-size: var(--text-display-s); font-weight: 600; line-height: 1.04; letter-spacing: var(--tracking-display); }
+.lead { margin-top: var(--space-sm); font-size: var(--text-lead); color: var(--color-ink-2); max-width: 40ch; }
+.plain { position: relative; margin: var(--space-xl) 0 0; padding: var(--space-lg) 0 var(--space-lg) var(--space-xl); border-left: 2px solid var(--color-rule); }
+.plain::before { content: ""; position: absolute; left: calc(var(--space-3xs) * -4); top: var(--space-lg); width: var(--space-md); height: var(--space-md); border-radius: var(--radius-pill); background: var(--color-accent); box-shadow: 0 0 0 var(--space-xs) var(--color-paper); }
+.plain-label { margin-bottom: var(--space-xs); font-size: var(--text-sm); font-weight: 700; color: var(--color-accent-ink); }
+.plain p:not(.plain-label) { font-size: var(--text-xl); line-height: 1.45; max-width: 36ch; color: var(--color-ink); text-wrap: pretty; }
+.ep-actions { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-top: var(--space-lg); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 2.75rem; padding-inline: var(--space-lg); border: 1px solid var(--color-rule); border-radius: var(--radius-pill); background: var(--color-paper); color: var(--color-ink); font-weight: 500; text-decoration: none; cursor: pointer; transition: background-color var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out); }
+.btn:hover { background: var(--color-paper-2); border-color: var(--color-muted); }
+.btn:active { transform: scale(0.97); }
+.btn--solid { background: var(--color-ink); color: var(--color-paper); border-color: var(--color-ink); }
+.btn--solid:hover { background: var(--color-ink-2); border-color: var(--color-ink-2); }
+.btn--solid[aria-pressed="true"] { background: var(--color-paper); color: var(--color-ink); border-color: var(--color-ink); }
+
+/* Bento of episodes, with a spotlight that follows the cursor */
+.all { margin-top: var(--space-3xl); }
+.all h2 { font-size: var(--text-section); font-weight: 600; line-height: 1.05; letter-spacing: var(--tracking-display); max-width: 14ch; }
+.bento { list-style: none; margin: var(--space-lg) 0 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-sm); }
+.bento li { grid-column: span 2; }
+.bento li:nth-child(5n + 1) { grid-column: span 4; }
+.bento li:nth-child(5n + 4) { grid-column: span 3; }
+.bento li:nth-child(5n + 5) { grid-column: span 3; }
+.tile { --mx: -30rem; --my: -30rem; position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-lg); width: 100%; min-height: 11rem; padding: var(--space-lg); border: 1px solid var(--color-rule); border-radius: var(--radius-card); background: radial-gradient(22rem circle at var(--mx) var(--my), color-mix(in oklab, var(--color-accent) 16%, transparent), transparent 60%), var(--color-paper-2); color: var(--color-ink); text-align: left; text-decoration: none; cursor: pointer; transition: border-color var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out); }
+.tile:hover { border-color: var(--color-accent-ink); }
+.tile:active { transform: scale(0.985); }
+.tile[aria-current="step"] { border-color: var(--color-ink); }
+.tile .n { font-family: var(--font-outlier); font-size: var(--text-xs); color: var(--color-muted); }
+.tile strong { display: block; font-family: var(--font-display); font-size: var(--text-title); font-weight: 600; line-height: 1.15; letter-spacing: var(--tracking-display); }
+.tile span.d { display: block; margin-top: var(--space-2xs); font-size: var(--text-sm); color: var(--color-ink-2); }
+.meter { height: var(--space-2xs); border-radius: var(--radius-pill); background: var(--color-paper-3); overflow: hidden; }
+.meter i { display: block; height: 100%; width: 100%; transform-origin: left; transform: scaleX(var(--w, 0)); background: var(--color-accent); transition: transform var(--dur-long) var(--ease-out); }
+.tile[data-state="done"] .n::after { content: " watched"; color: var(--color-accent-ink); }
+.bento--catalog li, .bento--catalog li:nth-child(n) { grid-column: span 2; }
+.bento--catalog li:first-child { grid-column: span 4; }
+.tile--hero { min-height: 18rem; }
+.tile--hero strong { font-size: var(--text-3xl); max-width: 20ch; }
+.arch-art { position: absolute; right: var(--space-lg); bottom: 0; width: 11rem; height: 8rem; color: var(--color-ink); opacity: 0.9; }
+.catalog { padding-top: var(--space-xl); }
+.catalog h1 { font-size: var(--text-display-s); font-weight: 600; line-height: 1.04; letter-spacing: var(--tracking-display); max-width: 14ch; }
+
+.rail-home { display: grid; gap: var(--space-md); }
+.rail-home p { font-family: var(--font-display); font-size: var(--text-title); line-height: 1.2; letter-spacing: var(--tracking-display); }
+.rail-home a { color: var(--color-deep-muted); font-size: var(--text-sm); }
+.rail-home a:hover { color: var(--color-deep-ink); }
+
+/* Command palette */
+.palette { width: 100%; max-width: 34rem; margin: 12vh auto 0; padding: 0; border: 1px solid var(--color-rule); border-radius: var(--radius-card); background: var(--color-paper); color: var(--color-ink); }
+.palette::backdrop { background: color-mix(in oklab, var(--color-deep) 60%, transparent); backdrop-filter: blur(4px); }
+.palette-box { margin: 0; }
+.palette input { width: 100%; height: 3.5rem; padding-inline: var(--space-lg); border: 0; border-bottom: 1px solid var(--color-rule); background: transparent; color: var(--color-ink); font-size: var(--text-lg); border-radius: var(--radius-card) var(--radius-card) 0 0; }
+.palette input:focus-visible { outline: none; }
+.palette input::-webkit-search-cancel-button { appearance: none; display: none; }
+.palette ul { list-style: none; margin: 0; padding: var(--space-xs); max-height: 22rem; overflow-y: auto; }
+.palette li { display: flex; justify-content: space-between; gap: var(--space-md); padding: var(--space-sm) var(--space-md); border-radius: calc(var(--radius-card) - var(--space-xs)); cursor: pointer; font-size: var(--text-sm); }
+.palette li small { color: var(--color-muted); font-family: var(--font-outlier); }
+.palette li[aria-selected="true"] { background: var(--color-paper-3); }
+
+@media (max-width: 60rem) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .rail { position: static; height: auto; padding-bottom: var(--space-md); }
+  .branch, .rail-count { display: none; }
+  .stage { padding-inline: var(--gutter); }
+  .theatre { padding: var(--space-md); }
+  .bento li, .bento li:nth-child(n) { grid-column: 1 / -1; }
+}
+@media (max-width: 40rem) { .mode-label { display: none; } .plain { padding-left: var(--space-lg); } .arch-art { display: none; } }
+::view-transition-old(episode), ::view-transition-new(episode) { animation-duration: var(--dur-long); animation-timing-function: var(--ease-out); }
