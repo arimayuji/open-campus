@@ -1,2 +1,64 @@
 /* Grove motion. Three durations, three easings, and the few things allowed to move. */
 @keyframes halo { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(2.4); } }
+
+/* Rise: things arrive from a little below, one after another. `backwards` so hover transforms still work afterwards. */
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+@keyframes slide-in { from { opacity: 0; transform: translateX(-10px); } }
+@keyframes unveil { from { opacity: 0; transform: scale(0.97); } }
+@keyframes bloom { 0% { transform: scale(1); } 35% { transform: scale(1.9); } 100% { transform: scale(1); } }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.025); } 100% { transform: scale(1); } }
+@keyframes nudge { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 60% { transform: translateX(4px); } }
+@keyframes dock-in { from { transform: translateY(100%); } }
+@keyframes ep-out-fwd { to { opacity: 0; transform: translateX(-28px); } }
+@keyframes ep-in-fwd { from { opacity: 0; transform: translateX(28px); } }
+@keyframes ep-out-back { to { opacity: 0; transform: translateX(28px); } }
+@keyframes ep-in-back { from { opacity: 0; transform: translateX(-28px); } }
+@keyframes reveal { from { clip-path: circle(0 at var(--vx, 50%) var(--vy, 0)); } to { clip-path: circle(var(--vr, 150vmax) at var(--vx, 50%) var(--vy, 0)); } }
+
+.stagger > * { animation: rise var(--dur-long) var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 45ms); }
+.branch > .leaf { animation: slide-in var(--dur-long) var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 35ms); }
+.theatre { animation: unveil 600ms var(--ease-out) backwards; }
+.arch > video, .arch > iframe { animation: unveil var(--dur-long) var(--ease-out) backwards; }
+.dock:not([hidden]) { animation: dock-in var(--dur-long) var(--ease-out) backwards; }
+
+/* A finished episode: the bud swells and the halo goes out once */
+.leaf.bloom .bud { animation: bloom 650ms var(--ease-out); transform-box: fill-box; transform-origin: center; }
+.leaf.bloom .halo { animation: halo 900ms var(--ease-out); }
+
+/* Quiz: options arrive in turn; the right one swells, a wrong one shakes once, the explanation rises */
+.q-opt { animation: rise var(--dur-long) var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 60ms); }
+.q-opt[data-result="right"] { animation: pop 420ms var(--ease-out); }
+.q-opt[data-result="wrong"] { animation: nudge 360ms var(--ease-out); }
+.q-feedback > * { animation: rise var(--dur-long) var(--ease-out) backwards; }
+
+/* Pressing feels like pressing */
+.btn:active, .chip:active, .q-opt:not(:disabled):active, .tile:active { transform: scale(0.98); }
+.play:active { transform: scale(0.94); }
+
+/* Dialogs ease in and out instead of snapping */
+.palette, .prof { transition: opacity var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out), overlay var(--dur-short) allow-discrete, display var(--dur-short) allow-discrete; }
+.palette:not([open]), .prof:not([open]) { opacity: 0; transform: translateY(10px) scale(0.98); }
+.palette[open], .prof[open] { opacity: 1; transform: none; }
+@starting-style { .palette[open], .prof[open] { opacity: 0; transform: translateY(10px) scale(0.98); } }
+.palette::backdrop, .prof::backdrop { transition: opacity var(--dur-short) var(--ease-out), overlay var(--dur-short) allow-discrete, display var(--dur-short) allow-discrete; opacity: 0; }
+.palette[open]::backdrop, .prof[open]::backdrop { opacity: 1; }
+@starting-style { .palette[open]::backdrop, .prof[open]::backdrop { opacity: 0; } }
+
+/* Changing episode: the text slides the way you are going; the rest of the page holds still */
+html[data-vt="ep"]::view-transition-old(root), html[data-vt="ep"]::view-transition-new(root) { animation: none; }
+html[data-vt="ep"][data-dir="fwd"]::view-transition-old(episode) { animation: ep-out-fwd var(--dur-short) var(--ease-in) both; }
+html[data-vt="ep"][data-dir="fwd"]::view-transition-new(episode) { animation: ep-in-fwd var(--dur-long) var(--ease-out) both; }
+html[data-vt="ep"][data-dir="back"]::view-transition-old(episode) { animation: ep-out-back var(--dur-short) var(--ease-in) both; }
+html[data-vt="ep"][data-dir="back"]::view-transition-new(episode) { animation: ep-in-back var(--dur-long) var(--ease-out) both; }
+
+/* Light and dark: the new theme spreads from the button that was pressed */
+html[data-vt="theme"]::view-transition-old(root) { animation: none; }
+html[data-vt="theme"]::view-transition-new(root) { animation: reveal 650ms var(--ease-in-out) both; }
+html[data-vt="theme"]::view-transition-old(root), html[data-vt="theme"]::view-transition-new(root) { mix-blend-mode: normal; }
+
+/* Moving between pages of the site: a short cross-fade instead of a white flash */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 200ms; }
+}
+html[data-vt="theme"] .episode { view-transition-name: none; }

@@ -14,7 +14,7 @@
   const get = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const set = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* storage can be blocked */ } };
   const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const { morph } = window.Grove;
+  const { morph, stagger } = window.Grove;
 
   $("#brand-mark").append($("#logo").content.cloneNode(true));
   $("#kbd").textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘ K" : "Ctrl K";
@@ -27,7 +27,11 @@
     $(".mode-label", modeBtn).textContent = m === "dark" ? "Dark" : "Light";
     set("campus-mode", m);
   };
-  const toggleMode = () => applyMode(root.dataset.mode === "dark" ? "light" : "dark");
+  const toggleMode = () => {
+    const next = root.dataset.mode === "dark" ? "light" : "dark";
+    const r = modeBtn.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+    morph(() => applyMode(next), "theme", { "--vx": x + "px", "--vy": y + "px", "--vr": Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)) + "px" });
+  };
   applyMode(root.dataset.mode === "dark" ? "dark" : "light");
   modeBtn.addEventListener("click", toggleMode);
 
@@ -96,6 +100,7 @@
       });
       const ask = el("a", { className: "tile", href: "https://github.com/arimayuji/open-campus/issues/new", target: "_blank", rel: "noopener" }, el("span", {}, el("strong", { textContent: "Suggest a lecture" }), el("span", { className: "d", textContent: "Open or Creative Commons material only. A person reads every suggestion." })));
       spotlight(ask); ul.append(el("li", {}, ask));
+      stagger(ul);
       if (!list.length) say("No lessons are published yet.");
     } catch (e) { say("Could not load the lessons."); }
   }
@@ -140,6 +145,7 @@
       branch.append(li);
       return li;
     });
+    leaves.forEach((l, i) => l.style.setProperty("--i", Math.min(i, 14)));
     const tiles = E.map((e, i) => {
       const meter = el("div", { className: "meter" }, el("i"));
       const t = el("button", { type: "button", className: "tile" }, el("span", {}, el("span", { className: "n", textContent: "Episode " + (i + 1) + ", " + Math.max(1, Math.round((e.end - e.start) / 60)) + " min" }), el("strong", { textContent: e.title }), el("span", { className: "d", textContent: e.lead })), meter);
@@ -148,10 +154,12 @@
       bento.append(el("li", {}, t));
       return t;
     });
+    stagger(bento);
 
     const paint = () => {
       E.forEach((_, i) => {
         const done = seen.has(i), strength = Math.min(plays[i] || 0, 4);
+        if (done && leaves[i].dataset.state === "todo" && !calm) { leaves[i].classList.add("bloom"); setTimeout(() => leaves[i].classList.remove("bloom"), 950); }
         leaves[i].dataset.state = done ? "done" : "todo";
         leaves[i].dataset.mastered = String(quiz[i] === "right");
         tiles[i].dataset.state = done ? "done" : "todo";
@@ -212,7 +220,7 @@
       opts.textContent = ""; fb.textContent = "";
       const lock = () => opts.querySelectorAll("button").forEach((b) => { b.disabled = true; });
       q.options.forEach((o, i) => {
-        const b = el("button", { type: "button", className: "q-opt" }, el("i", { textContent: "ABCD"[i] }), el("span", { textContent: o }));
+        const b = el("button", { type: "button", className: "q-opt", style: "--i:" + i }, el("i", { textContent: "ABCD"[i] }), el("span", { textContent: o }));
         b.addEventListener("click", () => {
           lock();
           const ok = i === q.answer;
@@ -248,7 +256,9 @@
       showPoster(); renderQuiz(); paint();
     };
     function go(i) {
-      cur = Math.max(0, Math.min(N - 1, i));
+      const to = Math.max(0, Math.min(N - 1, i));
+      root.dataset.dir = to < cur ? "back" : "fwd";
+      cur = to;
       history.replaceState(null, "", "#ep-" + (cur + 1));
       morph(render);
     }

@@ -19,7 +19,17 @@
   });
 
   /** Swap content with a cross-fade where the browser supports it, instantly when motion is reduced. */
-  const morph = (fn) => (document.startViewTransition && !calm() ? document.startViewTransition(fn) : fn());
+  const morph = (fn, kind = "ep", extra = {}) => {
+    if (!document.startViewTransition || calm()) return fn();
+    const r = document.documentElement;
+    r.dataset.vt = kind; Object.entries(extra).forEach(([k, v]) => r.style.setProperty(k, v));
+    const t = document.startViewTransition(fn);
+    t.finished.finally(() => { delete r.dataset.vt; delete r.dataset.dir; });
+    return t;
+  };
+
+  /** Mark the children of a list so they arrive one after another (see .stagger in motion.css). */
+  const stagger = (list) => { list.classList.add("stagger"); [...list.children].forEach((c, i) => c.style.setProperty("--i", Math.min(i, 12))); };
 
   /** One leaf of the branch: a bud, the vine to the next leaf, a title and a time. state: todo | done. */
   const leaf = ({ title, time, state = "todo", current = false, mastered = false, strength = 0, last = false, onClick }) => {
@@ -36,5 +46,5 @@
     return li;
   };
 
-  window.Grove = { spotlight, morph, leaf, el, svg, calm };
+  window.Grove = { spotlight, morph, stagger, leaf, el, svg, calm };
 })();
