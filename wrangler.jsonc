@@ -2,8 +2,12 @@
   "name": "open-campus",
   "main": "src/worker.js",
   "compatibility_date": "2026-10-01",
-  "assets": { "directory": "./prototype", "binding": "ASSETS" },
+  "assets": { "directory": "./prototype", "binding": "ASSETS", "run_worker_first": ["/api/*", "/media/*"] },
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "open-campus-media" }],
+  "d1_databases": [{ "binding": "DB", "database_name": "open-campus", "database_id": "1e7ac504-1ba1-4688-87d4-db986b74a90a", "migrations_dir": "migrations" }],
+  "ai": { "binding": "AI" },
+  "workflows": [{ "name": "ingest-lesson", "binding": "INGEST", "class_name": "IngestLesson" }],
+  "vars": { "CF_ACCOUNT_ID": "35e69fe7af35640858f66cc92350e2bb" },
   "routes": [
     { "pattern": "opencampus.dev", "custom_domain": true },
     { "pattern": "www.opencampus.dev", "custom_domain": true }

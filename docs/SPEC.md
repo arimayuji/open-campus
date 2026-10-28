@@ -26,7 +26,7 @@ Anyone who can read: a 60-year-old starting from zero should be able to follow e
 8. **Suggestions** through GitHub Issues forms.
 
 ## Architecture (all Cloudflare)
-Workers (API and site), R2 (files), D1 (catalogue, concepts, mastery), Vectorize plus Workers AI (retrieval), Cron Triggers (freshness). Heavy ingestion (yt-dlp, Whisper, chunking, embeddings) runs locally and publishes only metadata and chunks.
+Workers (API and site), R2 (files), D1 (catalogue, concepts, mastery), Vectorize plus Workers AI (retrieval), Cron Triggers (freshness). Adding a lesson runs on Cloudflare too (Workflows, Stream, Workers AI, D1); see `docs/CLOUD.md`. The local scripts in `pipeline/` stay as a fallback for YouTube transcripts.
 
 RAG schema: `source, type, level, topic, date, locator`. Video is chunked by time, PDFs by chapter and section, with parent-child chunks; search is hybrid with filters; every answer cites a timestamp or page and citations are verified against the retrieved chunks.
 

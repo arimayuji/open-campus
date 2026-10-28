@@ -1,5 +1,8 @@
-// Serves the static site and streams hosted videos from a private R2 bucket.
+// Serves the static site, the JSON API, and streams hosted videos from a private R2 bucket.
 // Only GET and HEAD, only /media/<11-char id>.mp4, byte ranges supported for seeking.
+import { api } from "./api.js";
+export { IngestLesson } from "./ingest.js";
+
 const KEY = /^\/media\/([A-Za-z0-9_-]{11})\.mp4$/;
 
 const SECURITY = {
@@ -64,6 +67,7 @@ async function media(req, env, url) {
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
+    if (url.pathname.startsWith("/api/")) return withSecurity(await api(req, env, url));
     if (url.pathname.startsWith("/media/")) return withSecurity(await media(req, env, url));
     return withSecurity(await env.ASSETS.fetch(req));
   },
