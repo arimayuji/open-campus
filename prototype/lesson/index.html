@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logistic regression in Open Campus</title>
+<meta name="description" content="A lesson on logistic regression with a step-by-step breakdown, linked concepts and a mastery graph.">
+<script>try{var m=localStorage.getItem("campus-mode");if(m==="dark")document.documentElement.dataset.mode="dark"}catch(e){}</script>
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./app.css">
+</head>
+<body>
+<a class="skip" href="#view-lesson">Skip to lesson</a>
+
+<template id="i-done"><circle cx="8" cy="8" r="6.5" fill="currentColor" stroke="none"/><path d="M5.2 8.2l1.9 1.9 3.7-3.9" fill="none" stroke="var(--color-paper)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></template>
+<template id="i-current"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2.6" fill="currentColor"/></template>
+
+<div class="app">
+  <header class="bar">
+    <a class="brand" href="#view-lesson">Open Campus</a>
+    <div class="bar-tools">
+      <div class="seg" role="tablist" aria-label="View">
+        <button type="button" role="tab" id="tab-lesson" data-view="lesson" aria-selected="true" aria-controls="view-lesson">Lesson</button>
+        <button type="button" role="tab" id="tab-graph" data-view="graph" aria-selected="false" aria-controls="view-graph">Concept graph</button>
+      </div>
+      <button type="button" class="btn btn--quiet" id="mode" aria-pressed="false" aria-label="Dark mode">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.2 9.6A5.5 5.5 0 0 1 6.4 2.8a5.5 5.5 0 1 0 6.8 6.8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        <span class="mode-label">Light</span>
+      </button>
+    </div>
+  </header>
+
+  <details class="outline" open>
+    <summary>Course outline</summary>
+    <nav class="outline-inner" aria-label="Course outline">
+      <p class="outline-title">Machine learning foundations</p>
+      <div class="progress">
+        <p id="bar-text">2 of 6 complete</p>
+        <progress id="bar-progress" value="2" max="6" aria-labelledby="bar-text"></progress>
+      </div>
+
+      <div class="module">
+        <h2>Foundations</h2>
+        <ol>
+          <li><a class="item" href="#" data-state="done"><svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="currentColor"/><path d="M5.2 8.2l1.9 1.9 3.7-3.9" fill="none" stroke="var(--color-paper)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Linear regression</span></a></li>
+          <li><a class="item" href="#" data-state="done"><svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="currentColor"/><path d="M5.2 8.2l1.9 1.9 3.7-3.9" fill="none" stroke="var(--color-paper)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Probability basics</span></a></li>
+        </ol>
+      </div>
+      <div class="module">
+        <h2>Classification</h2>
+        <ol>
+          <li><a class="item" href="#view-lesson" data-state="current" aria-current="page"><svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2.6" fill="currentColor"/></svg><span>Logistic regression</span></a></li>
+          <li><a class="item" href="#" data-state="todo"><svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><span>Cross-entropy loss</span></a></li>
+          <li><a class="item" href="#" data-state="todo"><svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><span>Gradient descent</span></a></li>
+          <li><a class="item" href="#" data-state="quiz"><svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.75" y="1.75" width="12.5" height="12.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5.6 8.2l1.7 1.7 3.2-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Quiz on classification<small>Adaptive, retests weak concepts</small></span></a></li>
+        </ol>
+      </div>
+    </nav>
+  </details>
+
+  <main class="main">
+    <article class="lesson" id="view-lesson" role="tabpanel" aria-labelledby="tab-lesson">
+      <header>
+        <h1>Logistic regression</h1>
+        <p class="lead">Predict the probability of a yes-or-no outcome by passing a <button type="button" class="term" data-term="linear" aria-expanded="false">linear score</button> through the <button type="button" class="term" data-term="sigmoid" aria-expanded="false">sigmoid</button>.</p>
+      </header>
+
+      <figure class="video">
+        <div data-slot="video" id="video-slot" data-video="">
+          <div class="slot-note">
+            <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="3" y="7" width="34" height="26" rx="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 14.5v11l9-5.5z" fill="currentColor"/></svg>
+            <p>The lecture video plays here.</p>
+          </div>
+        </div>
+        <figcaption>Lecture video. The player loads from the YouTube ID set on this slot, and the original credit sits beside it.</figcaption>
+      </figure>
+
+      <section aria-labelledby="h-steps">
+        <h2 id="h-steps">Step by step</h2>
+        <div class="steps">
+          <details class="step" open>
+            <summary><span class="n">1</span>Start with a linear score</summary>
+            <div class="step-body">
+              <p>Combine the inputs with weights and a bias, exactly as in <button type="button" class="term" data-term="linear" aria-expanded="false">linear regression</button>. The result can be any real number.</p>
+              <pre class="formula">z = w·x + b</pre>
+            </div>
+          </details>
+
+          <details class="step" open>
+            <summary><span class="n">2</span>Squash the score into a probability</summary>
+            <div class="step-body">
+              <p>The <button type="button" class="term" data-term="sigmoid" aria-expanded="false">sigmoid</button> turns any score into a number between 0 and 1, which we read as the probability of the positive class.</p>
+              <pre class="formula">p = σ(z) = 1 / (1 + e^−z)</pre>
+              <div class="widget">
+                <svg viewBox="0 0 320 140" role="img" aria-label="Sigmoid curve with a marker at the chosen score">
+                  <line class="w-axis" x1="16" y1="124" x2="304" y2="124"/>
+                  <line class="w-axis" x1="160" y1="16" x2="160" y2="124"/>
+                  <path class="w-curve" d="M16.0 123.7L22.0 123.7L28.0 123.6L34.0 123.4L40.0 123.3L46.0 123.1L52.0 122.8L58.0 122.5L64.0 122.1L70.0 121.5L76.0 120.8L82.0 120.0L88.0 118.9L94.0 117.5L100.0 115.8L106.0 113.7L112.0 111.1L118.0 108.0L124.0 104.3L130.0 99.9L136.0 95.0L142.0 89.4L148.0 83.2L154.0 76.7L160.0 70.0L166.0 63.3L172.0 56.8L178.0 50.6L184.0 45.0L190.0 40.1L196.0 35.7L202.0 32.0L208.0 28.9L214.0 26.3L220.0 24.2L226.0 22.5L232.0 21.1L238.0 20.0L244.0 19.2L250.0 18.5L256.0 17.9L262.0 17.5L268.0 17.2L274.0 16.9L280.0 16.7L286.0 16.6L292.0 16.4L298.0 16.3L304.0 16.3"/>
+                  <circle class="w-dot" id="w-dot" cx="160" cy="70" r="6"/>
+                </svg>
+                <label for="z">Score z <output id="z-out" for="z">z = 0.0, p = 0.500</output></label>
+                <input type="range" id="z" min="-6" max="6" step="0.1" value="0">
+              </div>
+            </div>
+          </details>
+
+          <details class="step" open>
+            <summary><span class="n">3</span>Pick a threshold</summary>
+            <div class="step-body">
+              <p>Predict the positive class when p is at least 0.5, which happens exactly when z is at least 0. The <button type="button" class="term" data-term="boundary" aria-expanded="false">decision boundary</button> is therefore a straight line in the input space.</p>
+            </div>
+          </details>
+
+          <details class="step" open>
+            <summary><span class="n">4</span>Measure the error with log loss</summary>
+            <div class="step-body">
+              <p><button type="button" class="term" data-term="logloss" aria-expanded="false">Log loss</button> is small when the model is confident and right, and grows fast when it is confident and wrong.</p>
+              <pre class="formula">L = −[ y·log(p) + (1 − y)·log(1 − p) ]</pre>
+              <div class="callout">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 9v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="6.3" r="1" fill="currentColor"/></svg>
+                <div>
+                  <h3>Why not mean squared error?</h3>
+                  <p>Squared error on top of a sigmoid gives a loss surface with flat regions that slow learning. Log loss is convex for logistic regression, so there is one minimum to find.</p>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="step" open>
+            <summary><span class="n">5</span>Fit the weights</summary>
+            <div class="step-body">
+              <p><button type="button" class="term" data-term="gd" aria-expanded="false">Gradient descent</button> nudges each weight against the gradient of the loss. For log loss the gradient has a clean form.</p>
+              <pre class="formula">w ← w − η · (p − y) · x</pre>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <footer class="lesson-foot">
+        <div class="pair">
+          <a class="btn" href="#">Previous: Probability basics</a>
+          <a class="btn" href="#">Next: Cross-entropy loss</a>
+        </div>
+        <button type="button" class="btn btn--primary" id="complete" aria-pressed="false"><span class="c-label">Mark lesson complete</span></button>
+      </footer>
+    </article>
+
+    <section class="graph-view" id="view-graph" role="tabpanel" aria-labelledby="tab-graph" hidden>
+      <h1>Concept graph</h1>
+      <p class="lead">Each concept is linked to what it builds on. Select one to read it in the side panel.</p>
+      <div class="graph-wrap">
+        <svg viewBox="0 0 820 340" role="group" aria-label="Concept graph">
+          <g aria-hidden="true">
+            <line class="g-edge" x1="90" y1="90" x2="410" y2="170"/>
+            <line class="g-edge" x1="90" y1="250" x2="250" y2="170"/>
+            <line class="g-edge" x1="250" y1="170" x2="410" y2="170"/>
+            <line class="g-edge" x1="410" y1="170" x2="570" y2="90"/>
+            <line class="g-edge" x1="410" y1="170" x2="570" y2="250"/>
+            <line class="g-edge" x1="570" y1="90" x2="730" y2="90"/>
+            <line class="g-edge" x1="570" y1="90" x2="730" y2="250"/>
+          </g>
+          <g class="g-node" data-term="linear" data-state="mastered" tabindex="0" role="button" aria-label="Linear regression, mastered"><circle class="g-ring" cx="90" cy="90" r="15"/><circle class="g-dot" cx="90" cy="90" r="9"/><text class="g-label" x="90" y="66">Linear regression</text></g>
+          <g class="g-node" data-term="probability" data-state="mastered" tabindex="0" role="button" aria-label="Probability basics, mastered"><circle class="g-ring" cx="90" cy="250" r="15"/><circle class="g-dot" cx="90" cy="250" r="9"/><text class="g-label" x="90" y="282">Probability basics</text></g>
+          <g class="g-node" data-term="sigmoid" data-state="review" tabindex="0" role="button" aria-label="Sigmoid function, needs review"><circle class="g-ring" cx="250" cy="170" r="15"/><circle class="g-dot" cx="250" cy="170" r="9"/><text class="g-label" x="250" y="202">Sigmoid</text></g>
+          <g class="g-node" data-term="logreg" data-state="review" tabindex="0" role="button" aria-label="Logistic regression, needs review"><circle class="g-ring" cx="410" cy="170" r="15"/><circle class="g-dot" cx="410" cy="170" r="9"/><text class="g-label" x="410" y="202">Logistic regression</text></g>
+          <g class="g-node" data-term="logloss" data-state="unseen" tabindex="0" role="button" aria-label="Log loss, not started"><circle class="g-ring" cx="570" cy="90" r="15"/><circle class="g-dot" cx="570" cy="90" r="9"/><text class="g-label" x="570" y="66">Log loss</text></g>
+          <g class="g-node" data-term="boundary" data-state="unseen" tabindex="0" role="button" aria-label="Decision boundary, not started"><circle class="g-ring" cx="570" cy="250" r="15"/><circle class="g-dot" cx="570" cy="250" r="9"/><text class="g-label" x="570" y="282">Decision boundary</text></g>
+          <g class="g-node" data-term="gd" data-state="unseen" tabindex="0" role="button" aria-label="Gradient descent, not started"><circle class="g-ring" cx="730" cy="90" r="15"/><circle class="g-dot" cx="730" cy="90" r="9"/><text class="g-label" x="730" y="66">Gradient descent</text></g>
+          <g class="g-node" data-term="reg" data-state="unseen" tabindex="0" role="button" aria-label="Regularization, not started"><circle class="g-ring" cx="730" cy="250" r="15"/><circle class="g-dot" cx="730" cy="250" r="9"/><text class="g-label" x="730" y="282">Regularization</text></g>
+        </svg>
+      </div>
+      <ul class="legend">
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><circle class="l-m" cx="8" cy="8" r="6"/></svg>Mastered</li>
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><circle class="l-r" cx="8" cy="8" r="6"/></svg>Needs review</li>
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><circle class="l-u" cx="8" cy="8" r="6"/></svg>Not started</li>
+      </ul>
+      <p class="graph-note">Lines run from a prerequisite on the left to the concept that builds on it.</p>
+    </section>
+  </main>
+
+  <aside class="panel" id="panel" aria-label="Concept details" data-open="false">
+    <div class="panel-head">
+      <h2>Concept</h2>
+      <button type="button" class="btn btn--quiet" id="panel-close" aria-label="Close concept details">Close</button>
+    </div>
+    <div class="panel-empty" id="panel-empty">
+      <p>Select an underlined term in the lesson, or a node in the graph, to see its definition and where it comes from.</p>
+    </div>
+    <div class="record" id="record" hidden>
+      <h3 id="r-title"></h3>
+      <span class="status"><svg viewBox="0 0 16 16" aria-hidden="true"><circle id="r-status-dot" class="l-u" cx="8" cy="8" r="6"/></svg><span id="r-status-text"></span></span>
+      <dl>
+        <div><dt>Definition</dt><dd class="def" id="r-def"></dd></div>
+        <div><dt>Source</dt><dd id="r-source"></dd></div>
+        <div><dt>Related concepts</dt><dd><ul class="rel" id="r-rel"></ul></dd></div>
+      </dl>
+      <button type="button" class="btn" id="see-graph">See in graph</button>
+    </div>
+  </aside>
+</div>
+
+<script src="./app.js"></script>
+</body>
+</html>
