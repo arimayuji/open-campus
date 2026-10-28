@@ -10,7 +10,11 @@ A free, open, English-language study platform that turns openly available AI and
 - No certificates, no "diploma", no university names or logos in the product. Completion marks only.
 - Community suggests, a human curator decides.
 
+## Who it is for
+Anyone who can read: a 60-year-old starting from zero should be able to follow every lesson. Plain language is a requirement, not a bonus.
+
 ## Features
+0. **Plain-words layer in every lesson**: an everyday example with no jargon and no maths (the umbrella, the thermostat, the spam folder) before the technical steps, then a Plain / Standard / Technical switch that changes the depth of the explanations, the exam wording and the professor's answers. Larger text, high contrast and no timing pressure in exams.
 1. **Lesson**: embedded YouTube video, step-by-step breakdown, linked concept terms with a side panel (definition, source, related concepts, "see in graph").
 2. **Sandbox**: Python in the browser via Pyodide; Colab links for heavy cases.
 3. **Case studies** per track.
