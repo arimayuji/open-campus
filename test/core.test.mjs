@@ -113,3 +113,18 @@ test("parseCaptions removes rolling repeats and entities", () => {
   assert.equal(newWords("a b c", "b c d e"), "d e");
   assert.equal(newWords("a b c", "x y"), "x y");
 });
+
+import { mergeProgress, cleanProgress } from "../src/core.js";
+test("merging progress never loses work", () => {
+  const a = { seen: [0, 2], plays: { 0: 3 }, quiz: { 0: "right", 1: "wrong" } };
+  const b = { seen: [1, 2], plays: { 0: 1, 2: 5 }, quiz: { 0: "wrong", 1: "right" } };
+  const m = mergeProgress(a, b);
+  assert.deepEqual(m.seen, [0, 1, 2]);
+  assert.deepEqual(m.plays, { 0: 3, 2: 5 });
+  assert.deepEqual(m.quiz, { 0: "right", 1: "right" });
+});
+test("progress input is cleaned", () => {
+  const c = cleanProgress({ seen: [1, "x", -3, 999, 1.5, 4], plays: { 1: "7", 2: -1, z: 4 }, quiz: { 1: "maybe", 2: "right" } });
+  assert.deepEqual(c, { seen: [1, 4], plays: { 1: 7 }, quiz: { 2: "right" } });
+  assert.deepEqual(cleanProgress("nope"), { seen: [], plays: {}, quiz: {} });
+});

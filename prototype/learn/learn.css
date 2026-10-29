@@ -114,3 +114,9 @@
   .dock-n { font-family: var(--font-outlier); font-size: var(--text-xs); color: var(--color-deep-muted); }
   .dock-t { font-size: var(--text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
+
+/* Account */
+.me { display: inline-flex; align-items: center; gap: var(--space-xs); color: var(--color-ink-2); font-size: var(--text-sm); }
+.me img { width: 1.5rem; height: 1.5rem; border-radius: var(--radius-pill); }
+#signin { text-decoration: none; }
+@media (max-width: 40rem) { .me > span { display: none; } }

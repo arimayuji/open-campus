@@ -1,4 +1,5 @@
 // JSON API. Reads are public (published lessons only); writes need the admin token.
+import { auth } from "./auth.js";
 import { parseSource, passages, bm25, professorPrompt, checkAnswer } from "./core.js";
 
 const PROFESSOR_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
@@ -21,6 +22,8 @@ const LEVELS = new Set(["", "intro", "intermediate", "advanced"]);
 
 export async function api(req, env, url) {
   const p = url.pathname, m = req.method;
+  const authed = await auth(req, env, url);
+  if (authed) return authed;
   const admin = await isAdmin(req, env);
 
   if (p === "/api/submit" && m === "POST") {

@@ -266,3 +266,23 @@ export function checkAnswer(answer, found) {
   if (cited.some((c) => !allowed.has(c))) return { ok: false, reason: "cites a passage that was not retrieved" };
   return { ok: true, citations: [...new Set(cited)] };
 }
+
+/* Progress: what a learner has done in one lecture. Merging never loses work, so a phone and a laptop agree. */
+export function cleanProgress(p) {
+  const out = { seen: [], plays: {}, quiz: {} };
+  if (!p || typeof p !== "object") return out;
+  const ep = (k) => { const n = Number(k); return Number.isInteger(n) && n >= 0 && n < 200 ? n : null; };
+  if (Array.isArray(p.seen)) out.seen = [...new Set(p.seen.map(ep).filter((n) => n !== null))].sort((a, b) => a - b);
+  for (const [k, v] of Object.entries(p.plays && typeof p.plays === "object" ? p.plays : {})) { const n = ep(k), c = Number(v); if (n !== null && Number.isFinite(c) && c > 0) out.plays[n] = Math.min(Math.floor(c), 1000); }
+  for (const [k, v] of Object.entries(p.quiz && typeof p.quiz === "object" ? p.quiz : {})) { const n = ep(k); if (n !== null && (v === "right" || v === "wrong")) out.quiz[n] = v; }
+  return out;
+}
+
+export function mergeProgress(a, b) {
+  const x = cleanProgress(a), y = cleanProgress(b);
+  const plays = { ...x.plays };
+  for (const [k, v] of Object.entries(y.plays)) plays[k] = Math.max(plays[k] || 0, v);
+  const quiz = { ...x.quiz };
+  for (const [k, v] of Object.entries(y.quiz)) quiz[k] = quiz[k] === "right" || v === "right" ? "right" : "wrong";
+  return { seen: [...new Set([...x.seen, ...y.seen])].sort((p, q) => p - q), plays, quiz };
+}

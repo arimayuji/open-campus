@@ -12,7 +12,9 @@
   const svg = (tag, attrs = {}) => { const n = document.createElementNS(NS, tag); Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v)); return n; };
   const fmt = (s) => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
   const get = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
-  const set = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* storage can be blocked */ } };
+  let onSave = () => {};
+  const set = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* storage can be blocked */ } if (/^campus-(ep|plays|quiz):/.test(k)) onSave(); };
+  let me = null; // the signed-in learner, if any
   const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const { morph, stagger } = window.Grove;
 
@@ -77,6 +79,20 @@
   });
 
   const id = new URLSearchParams(location.search).get("id");
+  const account = fetch("/api/me").then((r) => r.json()).then((j) => {
+    if (!j.auth && !j.user) return;
+    if (j.user) {
+      me = j.user;
+      $("#me-name").textContent = me.login;
+      if (me.avatar) $("#me-img").src = me.avatar; else $("#me-img").hidden = true;
+      $("#me").hidden = false;
+    } else {
+      $("#signin").href = "/api/auth/github?back=" + encodeURIComponent(location.pathname + location.search);
+      $("#signin").hidden = false;
+    }
+  }).catch(() => {});
+  $("#signout").addEventListener("click", async () => { await fetch("/api/auth/logout", { method: "POST" }); location.reload(); });
+  if (new URLSearchParams(location.search).get("signin") === "failed") say("Sign in did not work. Try again.");
   if (!id) return catalog();
   api("/api/lessons/" + encodeURIComponent(id)).then(lesson, () => {
     $("#rail-body").hidden = false; $("#o-title").textContent = "Not found";
@@ -351,5 +367,26 @@
     const start = /^#ep-(\d+)$/.exec(location.hash);
     cur = start ? Math.max(0, Math.min(N - 1, Number(start[1]) - 1)) : Math.max(0, E.findIndex((_, i) => !seen.has(i)));
     render();
+
+    /* Saved progress: merge what this browser knows with what the account knows, then keep both in step */
+    const mergeInto = (r) => {
+      (r.seen || []).forEach((n) => seen.add(n));
+      Object.entries(r.plays || {}).forEach(([k, v]) => { plays[k] = Math.max(plays[k] || 0, v); });
+      Object.entries(r.quiz || {}).forEach(([k, v]) => { quiz[k] = quiz[k] === "right" || v === "right" ? "right" : "wrong"; });
+    };
+    const body = () => JSON.stringify({ seen: [...seen], plays, quiz });
+    let timer = 0;
+    const push = () => fetch("/api/progress/" + encodeURIComponent(L.id), { method: "PUT", headers: { "Content-Type": "application/json" }, body: body() }).catch(() => {});
+    account.then(async () => {
+      if (!me) return;
+      try {
+        const r = await fetch("/api/progress/" + encodeURIComponent(L.id));
+        if (r.ok) mergeInto(await r.json());
+      } catch (e) { return; }
+      set(kSeen, JSON.stringify([...seen])); set(kPlays, JSON.stringify(plays)); set(kQuiz, JSON.stringify(quiz));
+      if (!start) cur = Math.max(0, E.findIndex((_, i) => !seen.has(i)));
+      render(); push();
+      onSave = () => { clearTimeout(timer); timer = setTimeout(push, 800); };
+    });
   }
 })();

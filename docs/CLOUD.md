@@ -38,3 +38,8 @@ yt-dlp breaks when YouTube changes: rebuild the image regularly (a weekly schedu
 
 ## Tests
 `node --test test/core.test.mjs` covers link parsing, the licence gate, caption parsing and cut validation.
+
+## Accounts and saved progress
+Sign in with GitHub (`/api/auth/github`, callback `/api/auth/callback`). The Worker reads the public profile once and keeps no GitHub token. Sessions are a random cookie (`oc_session`, HttpOnly, Secure, SameSite=Lax, 30 days); D1 stores only its SHA-256. Progress is per user and lecture (`/api/progress/:lesson`, GET and PUT) and is merged, never overwritten: episodes seen are united, play counts take the maximum, a right answer beats a wrong one. The browser keeps working signed out and uploads what it has on first sign in.
+
+Setup: create a GitHub OAuth App with callback `https://opencampus.dev/api/auth/callback`, then `wrangler secret put GITHUB_CLIENT_ID` and `wrangler secret put GITHUB_CLIENT_SECRET`.
