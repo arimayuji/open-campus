@@ -23,7 +23,7 @@ kbd { font-family: var(--font-outlier); font-size: var(--text-xs); padding: var(
 .leaf[aria-current="step"] .bud { stroke: var(--color-deep-ink); stroke-width: 3; }
 .vine .halo { fill: none; stroke: var(--color-accent); stroke-width: 1.5; opacity: 0; transform-box: fill-box; transform-origin: center; }
 .leaf[aria-current="step"] .halo { animation: halo 2.4s var(--ease-out) infinite; }
-.arch { position: relative; aspect-ratio: 16 / 9; border-radius: 50% 50% var(--space-sm) var(--space-sm) / 34% 34% var(--space-sm) var(--space-sm); background: var(--color-stage-2); background-size: cover; background-position: center; overflow: hidden; }
+.arch { position: relative; aspect-ratio: 16 / 9; border-radius: calc(var(--radius-card) - var(--space-xs)); background: var(--color-stage-2); background-size: cover; background-position: center; overflow: hidden; }
 .arch video, .arch iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--color-deep); }
 .poster { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: var(--space-sm); background: linear-gradient(to top, color-mix(in oklab, var(--color-deep) 82%, transparent), color-mix(in oklab, var(--color-deep) 30%, transparent)); }
 .play { display: grid; place-items: center; width: 4.5rem; height: 4.5rem; border: 0; border-radius: var(--radius-pill); background: var(--color-accent); color: var(--color-deep); cursor: pointer; transition: transform var(--dur-short) var(--ease-out); }
