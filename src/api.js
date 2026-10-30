@@ -91,7 +91,8 @@ export async function api(req, env, url) {
     const track = String(b.track ?? "").trim().slice(0, 80), order = Number.isInteger(b.track_order) ? b.track_order : 0;
     const level = b.level ?? null;
     if (level !== null && !LEVELS.has(level)) return json({ error: "bad level" }, 400);
-    const r = await env.DB.prepare("UPDATE lessons SET track = ?, track_order = ?, level = COALESCE(?, level) WHERE id = ?").bind(track, order, level, meta[1]).run();
+    const title = typeof b.title === "string" && b.title.trim() ? b.title.trim().slice(0, 140) : null;
+    const r = await env.DB.prepare("UPDATE lessons SET track = ?, track_order = ?, level = COALESCE(?, level), title = COALESCE(?, title) WHERE id = ?").bind(track, order, level, title, meta[1]).run();
     return r.meta.changes ? json({ ok: true }) : json({ error: "not found" }, 404);
   }
   if (les && les[2] && m === "POST") {
