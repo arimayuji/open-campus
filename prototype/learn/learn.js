@@ -122,23 +122,35 @@
     actions = [{ label: "Switch light and dark", hint: "theme", run: toggleMode }];
     try {
       const list = await api("/api/lessons");
-      const ul = $("#cards");
-      list.forEach((l, i) => {
-        const a = el("a", { className: "tile" + (i === 0 ? " tile--hero" : ""), href: "?id=" + encodeURIComponent(l.id) },
-          el("span", {}, el("span", { className: "n", textContent: l.episodes.length + " episodes" }), el("strong", { textContent: l.title }), el("span", { className: "d", textContent: l.creator ? "from " + l.creator : "" })));
-        if (i === 0) a.append(archArt());
-        spotlight(a);
-        a.addEventListener("click", (ev) => {
-          if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button) return;
-          ev.preventDefault();
-          openLesson(l.id, a);
+      const root = $("#cards");
+      const groups = new Map();
+      list.forEach((l) => { const k = l.track || "More lectures"; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(l); });
+      const names = [...groups.keys()].sort((x, y) => (x === "More lectures") - (y === "More lectures"));
+      let first = true;
+      names.forEach((name) => {
+        const items = groups.get(name), eps = items.reduce((n, l) => n + l.episodes.length, 0);
+        const ul = el("ul", { className: "bento bento--catalog" });
+        items.forEach((l, i) => {
+          const a = el("a", { className: "tile" + (i === 0 ? " tile--hero" : ""), href: "?id=" + encodeURIComponent(l.id) },
+            el("span", {}, el("span", { className: "n", textContent: (i === 0 && items.length > 1 ? "Start here, " : "") + l.episodes.length + " episodes" }), el("strong", { textContent: l.title }), el("span", { className: "d", textContent: l.creator ? "from " + l.creator : "" })));
+          if (first && i === 0) a.append(archArt());
+          spotlight(a);
+          a.addEventListener("click", (ev) => {
+            if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button) return;
+            ev.preventDefault();
+            openLesson(l.id, a);
+          });
+          ul.append(el("li", {}, a));
+          actions.push({ label: l.title, hint: name, run: () => { location.href = "?id=" + encodeURIComponent(l.id); } });
         });
-        ul.append(el("li", {}, a));
-        actions.push({ label: l.title, hint: "open", run: () => { location.href = "?id=" + encodeURIComponent(l.id); } });
+        stagger(ul);
+        root.append(el("section", { className: "track" }, el("h2", { textContent: name }), el("p", { className: "track-meta", textContent: items.length + (items.length === 1 ? " lecture, " : " lectures, ") + eps + " episodes" }), ul));
+        first = false;
       });
       const ask = el("a", { className: "tile", href: "https://github.com/arimayuji/open-campus/issues/new", target: "_blank", rel: "noopener" }, el("span", {}, el("strong", { textContent: "Suggest a lecture" }), el("span", { className: "d", textContent: "Open or Creative Commons material only. A person reads every suggestion." })));
-      spotlight(ask); ul.append(el("li", {}, ask));
-      stagger(ul);
+      spotlight(ask);
+      const ul2 = el("ul", { className: "bento bento--catalog" }, el("li", {}, ask)); stagger(ul2);
+      root.append(el("section", { className: "track" }, ul2));
       if (!list.length) say("No lessons are published yet.");
     } catch (e) { say("Could not load the lessons."); }
   }

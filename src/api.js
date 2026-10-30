@@ -73,7 +73,7 @@ export async function api(req, env, url) {
   }
 
   if (p === "/api/lessons" && m === "GET") {
-    const q = admin ? "SELECT * FROM lessons ORDER BY created_at DESC LIMIT 100" : "SELECT * FROM lessons WHERE status = 'published' ORDER BY published_at DESC LIMIT 100";
+    const q = admin ? "SELECT * FROM lessons ORDER BY created_at DESC LIMIT 100" : "SELECT * FROM lessons WHERE status = 'published' ORDER BY track, track_order, published_at DESC LIMIT 100";
     const { results } = await env.DB.prepare(q).all();
     return json(results.map(present));
   }
@@ -83,6 +83,16 @@ export async function api(req, env, url) {
     const r = await env.DB.prepare("SELECT * FROM lessons WHERE id = ?").bind(les[1]).first();
     if (!r || (r.status !== "published" && !admin)) return json({ error: "not found" }, 404);
     return json(present(r));
+  }
+  const meta = /^\/api\/lessons\/([A-Za-z0-9._-]{3,100})\/meta$/.exec(p);
+  if (meta && m === "POST") {
+    if (!admin) return json({ error: "unauthorized" }, 401);
+    let b; try { b = await req.json(); } catch { return json({ error: "send JSON" }, 400); }
+    const track = String(b.track ?? "").trim().slice(0, 80), order = Number.isInteger(b.track_order) ? b.track_order : 0;
+    const level = b.level ?? null;
+    if (level !== null && !LEVELS.has(level)) return json({ error: "bad level" }, 400);
+    const r = await env.DB.prepare("UPDATE lessons SET track = ?, track_order = ?, level = COALESCE(?, level) WHERE id = ?").bind(track, order, level, meta[1]).run();
+    return r.meta.changes ? json({ ok: true }) : json({ error: "not found" }, 404);
   }
   if (les && les[2] && m === "POST") {
     if (!admin) return json({ error: "unauthorized" }, 401);

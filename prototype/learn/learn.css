@@ -120,3 +120,9 @@
 .me img { width: 1.5rem; height: 1.5rem; border-radius: var(--radius-pill); }
 #signin { text-decoration: none; }
 @media (max-width: 40rem) { .me > span { display: none; } }
+
+/* Tracks */
+.track { margin-top: var(--space-2xl); }
+.track h2 { font-size: var(--text-3xl); font-weight: 600; line-height: 1.05; letter-spacing: var(--tracking-display); }
+.track-meta { margin: var(--space-xs) 0 var(--space-md); font-size: var(--text-sm); color: var(--color-muted); }
+.catalog > .lead + #cards { margin-top: 0; }
